@@ -4,6 +4,8 @@
 
 This report is the Phase A reconciliation baseline. Evidence sources are the local filesystem, Git metadata, installed command lookup, Debian package database, and read-only host commands executed on 2026-09-13. Privileged systemd, netlink, and firewall queries failed in the execution sandbox with `Operation not permitted`; those values are explicitly unverified.
 
+The Phase B execution attempt on 2026-09-13 was blocked again. The container rejects `sudo` because `no_new_privileges` is set and `/etc/sudo.conf` is not root-owned. Host-level escalation reached a sudo password prompt, but this execution interface cannot provide interactive credentials. No host mutation or reboot was performed.
+
 ## Repository boundary
 
 `git -C /home/jamal/Documents/homelab/homelab-platform rev-parse --show-toplevel` returns `/home/jamal/Documents/homelab/homelab-platform`.
@@ -251,6 +253,10 @@ The Obsidian roadmap marks several discovery activities complete, while the dash
 - “Future infrastructure repository” wording is obsolete; the repository exists.
 - Planned components are not represented as installed components.
 - The historical inventory date is retained as historical, not current host state.
+
+## Phase B execution status
+
+**BLOCKED — not complete.** The requested authenticated verification and all host mutations remain outstanding. Do not report the host foundation as ready and do not install k3s until the commands in `docs/manual-actions.md`, the Phase B changes, reboot, and post-reboot validation have completed in a trusted host terminal.
 
 ## Phase A conclusion
 
