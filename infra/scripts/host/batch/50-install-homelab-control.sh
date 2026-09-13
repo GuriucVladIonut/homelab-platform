@@ -62,4 +62,5 @@ systemctl enable --now homelab-control
 step 'Validate'
 systemctl is-active --quiet homelab-control || fail 'service inactive'
 ss -lnt | grep -Eq '127\.0\.0\.1:8090' || fail 'service is not loopback-bound'
+curl --fail --silent --show-error http://127.0.0.1:8090/healthz | grep -Fxq ok || fail 'health endpoint failed'
 printf '%s\n' 'Control service installed outside Kubernetes and bound to loopback.'

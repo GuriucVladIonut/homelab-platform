@@ -23,15 +23,17 @@ func main() {
 	if _, err := rand.Read(buf); err != nil { log.Fatal(err) }
 	a := &app{csrf: hex.EncodeToString(buf), endpoints: *endpoints}
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", a.health)
-	mux.HandleFunc("GET /", a.index)
-	mux.HandleFunc("POST /cluster", a.cluster)
+	// Use path-only registrations for Ubuntu 22.04's Go 1.18 toolchain;
+	// method-pattern ServeMux routes require newer Go versions.
+	mux.HandleFunc("/healthz", a.health)
+	mux.HandleFunc("/", a.index)
+	mux.HandleFunc("/cluster", a.cluster)
 	log.Printf("homelab-control listening on %s", *listen)
 	log.Fatal(http.ListenAndServe(*listen, a.secure(mux)))
 }
 
 func (a *app) secure(next http.Handler) http.Handler { return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.Header().Set("X-Content-Type-Options", "nosniff"); w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'unsafe-inline'"); next.ServeHTTP(w, r) }) }
-func (a *app) health(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK); _, _ = w.Write([]byte("ok\n")) }
+func (a *app) health(w http.ResponseWriter, r *http.Request) { if r.Method != http.MethodGet { http.Error(w, "GET required", http.StatusMethodNotAllowed); return }; w.WriteHeader(http.StatusOK); _, _ = w.Write([]byte("ok\n")) }
 func (a *app) index(w http.ResponseWriter, r *http.Request) { if r.URL.Path != "/" { http.NotFound(w, r); return }; data := struct{ CSRF, Endpoints, Uptime string }{a.csrf, a.endpoints, time.Since(start).Round(time.Second).String()}; _ = page.Execute(w, data) }
 func (a *app) cluster(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost { http.Error(w, "POST required", http.StatusMethodNotAllowed); return }
