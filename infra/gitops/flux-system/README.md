@@ -4,10 +4,22 @@ Flux bootstrap has been completed and the GitHub repository is the source of
 truth for this cluster. The generated Flux manifests live under
 `infra/gitops/flux-system/flux-system`.
 
-`infrastructure.yaml` creates a second Flux Kustomization for
-`./infra/cluster`, after the bootstrap Kustomization is ready. That composition
-installs the prepared namespaces, explicit Traefik, cert-manager controller,
-and the lightweight observability baseline.
+The root Kustomization creates separate, dependency-ordered Flux
+Kustomizations. The base stage creates namespaces, then Traefik and
+cert-manager controllers install their CRDs before their dependent resources
+are applied. Observability is reconciled after the base stage.
+
+The stages are:
+
+- `infrastructure-base`
+- `infrastructure-traefik`
+- `infrastructure-traefik-config`
+- `infrastructure-cert-manager`
+- `infrastructure-cert-manager-config`
+- `infrastructure-observability`
+
+This prevents a Traefik Middleware or cert-manager custom resource from being
+server-side dry-run before its owning Helm release has installed the CRD.
 
 The cert-manager Cloudflare issuer remains intentionally gated. The current
 cert-manager resources contain only the chart and a documentation ConfigMap;
@@ -18,7 +30,8 @@ Normal operation:
 
 ```bash
 flux get all -A
-flux reconcile kustomization infrastructure --with-source -n flux-system
+flux reconcile kustomization flux-system --with-source -n flux-system
+flux reconcile kustomization infrastructure-traefik --with-source -n flux-system
 ```
 
 Rollback is performed by reverting the wiring commit and pushing it. Flux will
