@@ -34,6 +34,12 @@ sudo ./infra/scripts/host/batch/50-install-homelab-control.sh
 
 Flux clients and the loopback-only host control service become available. Flux bootstrap itself remains manual until GitHub authentication is complete.
 
+## POC/MVP test gates
+
+The host and Kubernetes POC is already testable: the operator has verified the k3s node, CoreDNS, metrics-server, local-path PVC provisioning, cluster DNS, lifecycle restart, and loopback control service. The next platform MVP gate is Flux bootstrap followed by reconciliation of private Traefik and lightweight observability. Test it with `flux get all -A`, `kubectl get pods -A`, private endpoint checks, Grafana health, and host-control actions while keeping the service loopback/private.
+
+The first household-data MVP should remain disabled until the platform MVP is stable. It consists of one catalog workflow plus one selected media application, with files under `/srv/homelab/data`, metadata-only PostgreSQL, a tested restore path, and no public exposure. Do not deploy Jellyfin, Immich, Samba shares, or the full application matrix simultaneously.
+
 ## Batch 4 — optional file-share foundation
 
 Run only after explicit approval:
