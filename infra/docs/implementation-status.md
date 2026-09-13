@@ -6,7 +6,7 @@ The host scripts in `infra/scripts/host/` are READY_FOR_EXECUTION and are intent
 
 ## Kubernetes and GitOps
 
-`30-install-k3s.sh` installs a pinned official k3s binary using its published checksum, systemd lifecycle, local-path storage, CoreDNS, metrics-server, ServiceLB, and explicit Traefik disablement. `31-install-kubernetes-tools.sh` installs pinned Helm/k9s artifacts with checksums; kubectl remains k3s-provided. `40-install-gitops-tools.sh` installs SOPS, age, and Flux clients without generating keys. k3s, Helm, and k9s are now DEPLOYED and validated by the operator; GitOps clients remain READY_FOR_EXECUTION.
+`30-install-k3s.sh` installs a pinned official k3s binary using its published checksum, systemd lifecycle, local-path storage, CoreDNS, metrics-server, ServiceLB, and explicit Traefik disablement. `31-install-kubernetes-tools.sh` installs pinned Helm/k9s artifacts with checksums; kubectl remains k3s-provided. `40-install-gitops-tools.sh` installs SOPS, age, and Flux clients without generating keys. k3s, Helm, and k9s are now DEPLOYED and validated by the operator; GitOps clients remain READY_FOR_EXECUTION. The node, addon rollouts, PVC, cluster DNS, and k3s lifecycle validation passed.
 
 Traefik, cert-manager, and lightweight observability are represented as pinned Flux-compatible Helm resources. The cert-manager issuer is intentionally gated until CF-001 and an encrypted token exist. Grafana, Prometheus, kube-state-metrics, and node-exporter use conservative resources and seven-day retention. Loki/Alloy and OpenSearch are not enabled.
 

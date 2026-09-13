@@ -36,7 +36,7 @@ Verified:
 | Swap | None active; `0B` |
 | Root filesystem | `/dev/sda6`, ext4, 196G total, 139G available, 26% used |
 | Physical disk | `/dev/sda`, 894.3G, ADATA SU650; Windows NTFS partitions remain present |
-| k3s binary | Installed and validated: `v1.36.4+k3s1` |
+| k3s binary | Installed and validated: `v1.36.4+k3s1`; node Ready |
 | Kubernetes paths | k3s state present under `/etc/rancher/k3s` and `/var/lib/rancher/k3s` |
 | Diagnostics installed | `iw`, `lm-sensors`, `smartmontools` packages present |
 | Kubernetes/GitOps tooling | k3s-provided kubectl, Helm `v4.2.3`, and k9s `v0.51.0` installed; Flux/SOPS/age not yet installed |
@@ -126,7 +126,7 @@ The homelab directory script completed successfully. The requested `/srv/homelab
 
 The NetworkManager priority script completed without disconnecting the active connection: Ethernet is `600`, household Wi-Fi profiles are `400`, and the phone hotspot profile is `200`. The script did not cycle any connection.
 
-These host changes are verified from user-provided execution output, but reboot persistence and firewall activation remain outstanding. The repository-side implementation is described in `docs/implementation-status.md`; k3s remains not installed.
+Host foundation and k3s are verified from user-provided execution output. Firewall is active; reboot persistence remains the next host gate. k3s node readiness, addon rollouts, local-path PVC provisioning, cluster DNS, and stop/start lifecycle passed. The repository-side implementation is described in `docs/implementation-status.md`.
 
 ### SSH
 
