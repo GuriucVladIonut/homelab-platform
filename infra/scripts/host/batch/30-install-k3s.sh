@@ -12,7 +12,11 @@ step 'Validate prerequisites'
 [[ "$(id -u)" -eq 0 ]] || fail 'run with sudo'
 [[ "$K3S_ARCH" == amd64 ]] || fail 'bundle supports amd64 only'
 for command_name in curl install sha256sum grep ip systemctl stat; do command -v "$command_name" >/dev/null || fail "missing $command_name"; done
-ip route | grep -Eq '(^| )10\.42\.[0-9.]+/[0-9]+|(^| )10\.43\.[0-9.]+/[0-9]+' && fail 'pod/service CIDR collides with existing route' || true
+if [[ ! -f /etc/rancher/k3s/config.yaml ]]; then
+    ip route | grep -Eq '(^| )10\.42\.[0-9.]+/[0-9]+|(^| )10\.43\.[0-9.]+/[0-9]+' && fail 'pod/service CIDR collides with existing route' || true
+else
+    printf '%s\n' 'Existing k3s configuration found; expected k3s CIDR routes are allowed for idempotent rerun.'
+fi
 step 'Download and verify pinned k3s artifact'
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
@@ -55,6 +59,10 @@ systemctl daemon-reload
 systemctl enable --now k3s
 step 'Validate k3s service'
 systemctl is-active --quiet k3s || { systemctl status k3s --no-pager; fail 'k3s failed to start'; }
-[[ -s /etc/rancher/k3s/k3s.yaml ]] || fail 'kubeconfig was not created'
+for attempt in {1..60}; do
+    [[ -s /etc/rancher/k3s/k3s.yaml ]] && break
+    sleep 1
+done
+[[ -s /etc/rancher/k3s/k3s.yaml ]] || fail 'kubeconfig was not created after 60 seconds'
 [[ "$(stat -c '%a' /etc/rancher/k3s/k3s.yaml)" != 644 ]] || fail 'kubeconfig is too broad'
 printf '%s\n' "Installed pinned k3s ${K3S_VERSION}; bundled Traefik disabled; systemd enabled."

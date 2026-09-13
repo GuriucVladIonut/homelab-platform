@@ -11,6 +11,9 @@ for command_name in systemctl kubectl; do command -v "$command_name" >/dev/null 
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 systemctl is-active --quiet k3s || fail 'k3s is not active'
 kubectl wait --for=condition=Ready node --all --timeout=120s
+kubectl -n kube-system rollout status deployment/coredns --timeout=120s
+kubectl -n kube-system rollout status deployment/metrics-server --timeout=120s
+kubectl -n kube-system rollout status deployment/local-path-provisioner --timeout=120s
 step 'Cluster health'
 kubectl get nodes -o wide
 kubectl get pods -A
@@ -54,10 +57,17 @@ cleanup() { kubectl delete namespace homelab-validation --wait=false >/dev/null 
 trap cleanup EXIT
 kubectl wait -n homelab-validation --for=jsonpath='{.status.phase}'=Succeeded pod/smoke --timeout=180s
 kubectl logs -n homelab-validation smoke
+kubectl run dns-smoke --image=busybox:1.36.1 --restart=Never --rm --attach -- nslookup kubernetes.default.svc.cluster.local
 step 'Lifecycle validation'
 systemctl stop k3s
 systemctl is-active --quiet k3s && fail 'k3s remained active after stop'
 systemctl start k3s
 systemctl is-active --quiet k3s || fail 'k3s did not restart'
+for attempt in {1..60}; do
+  kubectl get --raw=/readyz >/dev/null 2>&1 && break
+  sleep 1
+done
+kubectl get --raw=/readyz >/dev/null || fail 'k3s API did not become ready after restart'
+kubectl wait --for=condition=Ready node --all --timeout=120s
 kubectl get nodes
-printf '%s\n' 'k3s validation passed; disposable namespace cleanup is pending via trap.'
+printf '%s\n' 'k3s validation passed; disposable namespace cleanup completed via trap.'

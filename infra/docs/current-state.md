@@ -36,10 +36,10 @@ Verified:
 | Swap | None active; `0B` |
 | Root filesystem | `/dev/sda6`, ext4, 196G total, 139G available, 26% used |
 | Physical disk | `/dev/sda`, 894.3G, ADATA SU650; Windows NTFS partitions remain present |
-| k3s binary | Not found |
-| Kubernetes paths | `/etc/rancher`, `/var/lib/rancher`, `/etc/kubernetes`, `/var/lib/kubelet` absent |
+| k3s binary | Installed and validated: `v1.36.4+k3s1` |
+| Kubernetes paths | k3s state present under `/etc/rancher/k3s` and `/var/lib/rancher/k3s` |
 | Diagnostics installed | `iw`, `lm-sensors`, `smartmontools` packages present |
-| Kubernetes/GitOps tooling | `kubectl`, `helm`, `k9s`, `flux`, `sops`, `age`, `restic` not found |
+| Kubernetes/GitOps tooling | k3s-provided kubectl, Helm `v4.2.3`, and k9s `v0.51.0` installed; Flux/SOPS/age not yet installed |
 | VM tooling | `virsh`, `qemu-system-x86_64` not found |
 | Quality/security tooling | `shellcheck`, `shfmt`, `yamllint`, `kubeconform`, `trivy`, `gitleaks` not found |
 | Host packages observed | NetworkManager, OpenSSH server, UFW, smartmontools, lm-sensors, iw |
@@ -75,14 +75,15 @@ The historical 2026-08-11 inventory remains useful context but is not treated as
 
 ### Firewall
 
-UFW, nftables, iptables, and ip6tables rulesets could not be read because the trusted shell still requires an interactive sudo password. Firewall state is therefore **UNVERIFIED**, not assumed inactive or secure.
+UFW is active with default deny incoming, default allow outgoing, and default deny routed traffic. SSH is allowed only from RFC1918 IPv4 ranges; no global IPv6 SSH rule or Kubernetes/database/dashboard exposure was added. The underlying nftables/iptables rules reflect UFW policy.
 
 ### NetworkManager, routes, and DNS
 
 - NetworkManager: connected with full reported connectivity; Wi-Fi hardware and Wi-Fi are enabled.
 - Active interface: `wlp3s0` over Wi-Fi; Ethernet `enp2s0` is unavailable.
-- Multiple saved Wi-Fi profiles are set to autoconnect with default priority `0`.
-- Wired profile `Wired connection 1` is set to autoconnect priority `-999`, which does not implement the intended Ethernet-first policy.
+- Saved household Wi-Fi profiles use autoconnect priority `400`.
+- Wired profile `Wired connection 1` uses autoconnect priority `600`.
+- The phone hotspot profile uses autoconnect priority `200`; eduVPN remains autoconnect-disabled.
 - A WireGuard profile `eduVPN` exists but is not set to autoconnect.
 - The active route is DHCP IPv4 with metric `600` and an IPv6 router-advertised default route over Wi-Fi.
 - DNS is provided by the current LAN router through systemd-resolved; resolved uses a loopback stub and does not enable DNSSEC or DNS-over-TLS.
@@ -90,9 +91,9 @@ UFW, nftables, iptables, and ip6tables rulesets could not be read because the tr
 
 ### Memory, swap, and zram
 
-- No swap devices are active.
-- `/proc/swaps` is empty.
-- `systemd-zram-setup@zram0.service` does not exist.
+- `/dev/zram0` is active as 5 GiB swap at priority 100.
+- No disk-backed swapfile is active.
+- `homelab-zram.service` is enabled for persistence.
 - `vm.swappiness` is `60`.
 
 ### Storage and SMART
@@ -129,8 +130,8 @@ These host changes are verified from user-provided execution output, but reboot 
 
 ### SSH
 
-- `sshd_config` includes `/etc/ssh/sshd_config.d/*.conf`; no drop-in files currently exist.
-- The base configuration leaves several security settings at package defaults, including password authentication, root-login policy, X11 forwarding, and TCP forwarding; effective `sshd -T` output could not be obtained in this context.
+- `/etc/ssh/sshd_config.d/99-homelab-hardening.conf` is applied and effective configuration was validated.
+- Password and keyboard-interactive authentication remain enabled pending SSH key recovery; root login, X11 forwarding, TCP forwarding, agent forwarding, gateway ports, and tunnels are disabled.
 - Runtime exposure is confirmed on `0.0.0.0:22` and `[::]:22`.
 
 ### Packages and Ubuntu release readiness
@@ -150,16 +151,16 @@ Supported host baseline is explicitly fixed at Ubuntu 22.04.5 LTS with the 6.8.x
 | No failed systemd units | Safe | Preserve as a pre-change baseline |
 | SSH and NetworkManager enabled/running | Safe | Keep; harden SSH before upgrade |
 | Legacy Docker/containerd/MySQL/RabbitMQ units absent | Safe | Confirm no user workloads depend on them |
-| SSH exposed on all IPv4/IPv6 addresses | Needs remediation; upgrade blocker | Restrict authentication and firewall exposure |
+| SSH listens on all addresses but is firewall-restricted | Remediated for current phase | Keep password authentication until key recovery is validated |
 | Loopback-only resolved/CUPS listeners | Safe | Recheck after firewall changes |
 | Spotify listeners on wildcard ports | Needs remediation | Confirm desktop-only scope; prevent unwanted LAN exposure |
 | Wi-Fi active; Ethernet unavailable | Safe | Use for audit only; test priority changes later |
-| Wired profile priority `-999` | Needs remediation | Set explicit uplink priorities |
-| No swap/zram | Needs remediation | Add zram or swap before memory-sensitive platform work |
+| Wired/Wi-Fi/hotspot priorities | Remediated | Recheck after reboot |
+| Persistent 5 GiB zram | Remediated | Recheck after reboot |
 | Root ext4 has approximately 139 GiB free | Safe | Reserve capacity; do not use Windows partitions |
-| SMART health unavailable | Needs remediation | Obtain authenticated SMART report |
-| k3s modules available but unloaded | Safe before k3s | Load/configure during k3s host preparation |
-| Forwarding and bridge sysctls not enabled | Safe before k3s | Configure only with k3s implementation |
+| SMART health passed | Remediated | Recheck periodically |
+| k3s modules loaded and persisted | Remediated | Recheck after reboot |
+| Required forwarding and bridge sysctls enabled and persisted | Remediated | Recheck after reboot |
 | `dpkg --audit` clean; no holds | Safe | Recheck after authenticated apt check |
 | `apt-get check` unavailable | Needs remediation | Run authenticated check |
 | eduVPN third-party Jammy source enabled | Needs remediation | Review purpose; do not remove without approval |
