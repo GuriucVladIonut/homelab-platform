@@ -131,7 +131,7 @@ This is acceptable before k3s installation but not yet a validated k3s prerequis
 - A third-party eduVPN Jammy repository is enabled and must be reviewed for upgrade compatibility.
 - `do-release-upgrade -c` reports Ubuntu `24.04.5 LTS` available.
 
-Ubuntu 24.04 upgrade availability is confirmed. Upgrade safety is **NOT APPROVED** yet because backup/recovery, firewall state, SSH hardening, SMART health, package consistency, and third-party repository handling are incomplete or unverified.
+Ubuntu 24.04 upgrade availability is confirmed. The user explicitly accepts the risk that no external backup device or second physical disk is available in this phase. Same-disk copies are not disaster recovery and do not protect against physical disk failure. Future backup capability remains recommended, but lack of external backup is no longer an upgrade blocker.
 
 ## Finding classification
 
@@ -145,7 +145,7 @@ Ubuntu 24.04 upgrade availability is confirmed. Upgrade safety is **NOT APPROVED
 | Spotify listeners on wildcard ports | Needs remediation | Confirm desktop-only scope; prevent unwanted LAN exposure |
 | Wi-Fi active; Ethernet unavailable | Safe | Use for audit only; test priority changes later |
 | Wired profile priority `-999` | Needs remediation | Set explicit uplink priorities |
-| No swap/zram | Needs remediation; upgrade blocker | Add zram or swap before memory-sensitive platform work |
+| No swap/zram | Needs remediation | Add zram or swap before memory-sensitive platform work |
 | Root ext4 has approximately 139 GiB free | Safe | Reserve capacity; do not use Windows partitions |
 | SMART health unavailable | Upgrade blocker | Obtain authenticated SMART report |
 | k3s modules available but unloaded | Safe before k3s | Load/configure during k3s host preparation |
@@ -192,21 +192,30 @@ eduVPN WireGuard:            0, autoconnect disabled
 
 Exact profile names must be confirmed before applying changes. All household Wi-Fi profiles receive the same class priority; the hotspot profile must be identified explicitly.
 
-## Upgrade backup requirements
+## Upgrade safety without external backup
 
-- External target with enough capacity; it must not be `/dev/sda`.
-- Obsidian and `homelab-platform` repositories, including intended uncommitted work.
-- `/etc`, especially SSH, NetworkManager, apt sources/preferences, UFW, systemd overrides, mounts, and user service configuration.
-- `/home/jamal` data and application configuration within the chosen retention scope.
-- Package inventories and manually installed package lists.
-- Partition layout, filesystem UUIDs, and boot configuration.
-- Local-console/recovery access, SSH keys, sudo access, and recovery media.
-- Application-consistent database dumps if services/databases exist before upgrade.
-- Verified restoration of representative files and repository history.
+The user has accepted the following risk for the current phase:
+
+- No external backup device, new SSD/HDD, network storage, repartitioning, or personal-data relocation will be introduced.
+- The current physical disk, partition table, Windows/NTFS partitions, and filesystem layout remain unchanged.
+- Same-disk copies do not protect against physical disk failure, theft, or total filesystem loss.
+- This is **not disaster recovery**.
+- Future external or network-backed backup capability remains recommended, but is not an upgrade blocker for this phase.
+
+Local pre-upgrade safety measures are limited to configuration/evidence capture and repository commits. Do not create archives of large personal media/data merely to duplicate them on the same disk.
+
+Required local capture:
+
+- Commit and push intended repository changes.
+- Snapshot safe configuration into the technical repository without secrets.
+- Record installed packages, apt sources, enabled services, NetworkManager metadata, SSH configuration, mounts/fstab, kernel/boot configuration, partition layout, and SMART summary.
+- Preserve user-created configuration files where appropriate.
+- Verify at least 30 GiB free on the Ubuntu filesystem; current observed free space is approximately 140 GiB.
+- Ensure no Windows/NTFS partition is modified.
 
 ## Recommended host-change order
 
-1. Obtain an external backup and verify recovery of important personal data.
+1. Commit and push intended repository changes; capture safe local configuration and evidence.
 2. Complete privileged package, firewall, SMART, and SSH effective-state verification.
 3. Inventory and decide the fate of the eduVPN repository/profile and any non-package listeners.
 4. Review current Ubuntu release notes and third-party software compatibility.
@@ -214,8 +223,8 @@ Exact profile names must be confirmed before applying changes. All household Wi-
 6. Configure swap or zram with a documented memory policy.
 7. Harden SSH and restrict its exposure through the host firewall.
 8. Configure NetworkManager priorities: Ethernet first, household Wi-Fi second, hotspot third.
-9. Reboot and validate clean systemd state, networking, SSH, storage, and rollback access.
-10. Perform the Ubuntu 24.04 upgrade only after the above gates pass.
+9. Reboot and validate clean systemd state, networking, SSH, storage, and recovery access.
+10. Perform the Ubuntu 24.04 upgrade only after the remaining gates pass.
 11. Re-run the full audit after the upgrade before installing k3s.
 
 ## Reconciled status

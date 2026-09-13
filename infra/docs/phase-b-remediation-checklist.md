@@ -10,11 +10,16 @@ This prepares the laptop for Ubuntu 24.04 and later k3s installation. It is not 
 - [ ] Identify every wildcard listener and confirm whether it is desktop-only.
 - [ ] Confirm SSH key-based recovery from a second local/overlay path.
 
-## Gate 2 — backup
+## Gate 2 — accepted same-disk/no-external-backup risk
 
-- [ ] Select an external backup target; it must not be `/dev/sda`.
-- [ ] Back up personal data, both repositories, SSH access, `/etc`, package inventory, mounts, and recovery metadata.
-- [ ] Verify restoration of representative files and repository history.
+- [x] Record explicit user acceptance: no external backup device, new disk, network storage, repartitioning, or personal-data relocation in this phase.
+- [ ] Commit and push intended changes in both repositories.
+- [ ] Capture safe local configuration/evidence; do not capture plaintext secrets.
+- [ ] Do not create large same-disk personal-media archives for redundancy.
+- [x] Verify at least 30 GiB free on the Ubuntu filesystem; approximately 140 GiB is currently available.
+- [ ] Record recovery access and preserve user-created configuration files where appropriate.
+
+This is not disaster recovery. Same-disk copies do not protect against physical disk failure. Future external backup remains recommended but is not an upgrade blocker.
 
 ## Gate 3 — host baseline changes
 
@@ -30,7 +35,7 @@ This prepares the laptop for Ubuntu 24.04 and later k3s installation. It is not 
 - [ ] Re-run failed-unit, firewall, socket, SMART, and thermal checks.
 - [ ] Run `apt-get check`; confirm no holds or broken packages.
 - [ ] Review/disable third-party repositories according to an explicit decision.
-- [ ] Confirm `do-release-upgrade -c`, backup status, and recovery access.
+- [ ] Confirm `do-release-upgrade -c`, local safety capture, and recovery access.
 
 ## Gate 5 — after upgrade
 
