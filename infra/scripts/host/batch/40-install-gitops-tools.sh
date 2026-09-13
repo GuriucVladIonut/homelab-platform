@@ -21,8 +21,7 @@ install -m 0755 "$tmpdir/sops" /usr/local/bin/sops
 step 'Install age'
 age_archive="age-${AGE_VERSION}-linux-amd64.tar.gz"
 curl --fail --location --proto '=https' --tlsv1.2 -o "$tmpdir/$age_archive" "https://github.com/FiloSottile/age/releases/download/${AGE_VERSION}/$age_archive"
-curl --fail --location --proto '=https' --tlsv1.2 -o "$tmpdir/age.sha" "https://github.com/FiloSottile/age/releases/download/${AGE_VERSION}/SHA256SUMS"
-grep -E "[[:space:]]${age_archive}$" "$tmpdir/age.sha" > "$tmpdir/one.sha" || fail 'age checksum entry missing'
+printf '%s  %s\n' '7df45a6cc87d4da11cc03a539a7470c15b1041ab2b396af088fe9990f7c79d50' "$age_archive" > "$tmpdir/one.sha"
 (cd "$tmpdir" && sha256sum --check one.sha) || fail 'age checksum failed'
 tar -xzf "$tmpdir/$age_archive" -C "$tmpdir"
 install -m 0755 "$tmpdir/age/age" /usr/local/bin/age
