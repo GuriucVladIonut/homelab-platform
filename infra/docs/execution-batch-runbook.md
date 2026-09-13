@@ -49,3 +49,22 @@ ENABLE_SAMBA=1 sudo ./infra/scripts/host/batch/60-install-fileshare-foundation.s
 ```
 
 This installs packages only, leaves Samba services disabled, and creates no shares or credentials.
+
+## Batch 5 — Flux bootstrap and platform MVP
+
+After authenticating the HTTPS GitHub remote securely, run from the repository root:
+
+```bash
+flux check --pre
+flux bootstrap github \
+  --owner=GuriucVladIonut \
+  --repository=homelab-platform \
+  --branch=main \
+  --path=infra/gitops/flux-system \
+  --personal
+flux check
+flux get all -A
+kubectl get pods -A
+```
+
+Flux bootstrap writes sync manifests and commits them to GitHub. Review that diff before accepting it. It does not require or authorize Cloudflare changes. After reconciliation is healthy, verify private Traefik and observability HelmReleases; cert-manager remains gated until CF-001 is complete.

@@ -7,10 +7,10 @@ check() { if "$@" >/dev/null 2>&1; then printf 'PASS %s\n' "$*"; else printf 'FA
 [[ "$(id -u)" -eq 0 ]] || { echo 'REQUIRES_ROOT'; exit 2; }
 printf '%s\n' 'Phase B validation (read-only)'
 check bash -c '! systemctl --failed --no-legend | grep -q .'
-check grep -q 'homelab-zram.service' /etc/systemd/system/multi-user.target.wants/homelab-zram.service
+check systemctl is-enabled --quiet homelab-zram.service
 check bash -c 'swapon --show=NAME --noheadings | grep -Fxq /dev/zram0'
 check bash -c '! swapon --show=NAME --noheadings | grep -vFxq /dev/zram0'
-check bash -c 'zramctl --bytes --noheadings -o DISKSIZE /dev/zram0 | awk "{gsub(/ /,\"\"); exit !($1>=4294967296 && $1<=6442450944)}"'
+check bash -c 'size=$(zramctl --bytes --noheadings --output DISKSIZE /dev/zram0 | tr -d "[:space:]"); test "$size" -ge 4294967296 -a "$size" -le 6442450944'
 check bash -c 'sshd -T | grep -Fxq "permitrootlogin no"'
 check bash -c 'sshd -T | grep -Fxq "passwordauthentication yes"'
 check bash -c 'ufw status | grep -Eq "^Status: active$"'
