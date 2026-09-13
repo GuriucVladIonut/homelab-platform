@@ -7,7 +7,7 @@ step() { printf '\n===== %s =====\n' "$1"; }
 fail() { printf 'ERROR: %s\n' "$1" >&2; exit 1; }
 step 'Validate prerequisites'
 [[ "$(id -u)" -eq 0 ]] || fail 'run with sudo'
-for command_name in apt-get systemctl visudo useradd groupadd getent id install ss; do command -v "$command_name" >/dev/null || fail "missing $command_name"; done
+for command_name in apt-get systemctl visudo useradd groupadd getent id install ss curl; do command -v "$command_name" >/dev/null || fail "missing $command_name"; done
 [[ -f "$ROOT_DIR/apps/homelab-control/go.mod" ]] || fail 'control source missing'
 if ! command -v go >/dev/null; then
   step 'Install Go build dependency'
@@ -58,9 +58,17 @@ UNIT
 install -d -o homelab-control -g homelab-control -m 0750 /var/lib/homelab-control
 install -m 0640 -o root -g homelab-control "$ROOT_DIR/infra/config/endpoints.yaml" /opt/homelab/control/endpoints.yaml
 systemctl daemon-reload
-systemctl enable --now homelab-control
+if systemctl is-active --quiet homelab-control; then
+  systemctl restart homelab-control
+else
+  systemctl enable --now homelab-control
+fi
 step 'Validate'
 systemctl is-active --quiet homelab-control || fail 'service inactive'
 ss -lnt | grep -Eq '127\.0\.0\.1:8090' || fail 'service is not loopback-bound'
+for attempt in {1..10}; do
+  if curl --fail --silent --show-error http://127.0.0.1:8090/healthz | grep -Fxq ok; then break; fi
+  sleep 1
+done
 curl --fail --silent --show-error http://127.0.0.1:8090/healthz | grep -Fxq ok || fail 'health endpoint failed'
 printf '%s\n' 'Control service installed outside Kubernetes and bound to loopback.'
