@@ -12,7 +12,7 @@ Traefik, cert-manager, and lightweight observability are represented as pinned F
 
 ## Applications and storage
 
-`apps/homelab-control` is a standard-library Go loopback service with CSRF, POST-only state changes, confirmation for stop/restart, HTML escaping, security headers, and a fixed sudo helper boundary. `apps/catalog` is OPTIONAL_DISABLED source and schema for PostgreSQL metadata/audit only; media remains on host storage and physical deletion is not implemented in the baseline. Samba is an optional disabled package foundation with no accounts, passwords, or shares.
+`apps/homelab-control` is DEPLOYED outside Kubernetes as a standard-library Go loopback service under the non-root `homelab-control` account. It has CSRF, POST-only state changes, confirmation for stop/restart, HTML escaping, security headers, and a fixed sudo helper boundary; the operator verified it active on `127.0.0.1:8090`. `apps/catalog` is OPTIONAL_DISABLED source and schema for PostgreSQL metadata/audit only; media remains on host storage and physical deletion is not implemented in the baseline. Samba is an optional disabled package foundation with no accounts, passwords, or shares.
 
 ## DNS and secrets
 

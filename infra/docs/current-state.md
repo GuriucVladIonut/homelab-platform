@@ -128,6 +128,8 @@ The NetworkManager priority script completed without disconnecting the active co
 
 Host foundation and k3s are verified from user-provided execution output. Firewall is active; reboot persistence remains the next host gate. k3s node readiness, addon rollouts, local-path PVC provisioning, cluster DNS, and stop/start lifecycle passed. The repository-side implementation is described in `docs/implementation-status.md`.
 
+The host-control service is deployed and verified active as a non-root systemd service on loopback `127.0.0.1:8090`. Its fixed helper and sudoers policy are installed; no public binding was configured.
+
 ### SSH
 
 - `/etc/ssh/sshd_config.d/99-homelab-hardening.conf` is applied and effective configuration was validated.
