@@ -20,8 +20,12 @@ spec:
       isDefaultClass: true
     ports:
       web:
-        redirectTo:
-          port: websecure
+        http:
+          redirections:
+            entryPoint:
+              to: websecure
+              scheme: https
+              permanent: true
     ingressRoute:
       dashboard:
         enabled: false
