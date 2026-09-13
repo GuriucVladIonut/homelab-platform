@@ -54,6 +54,99 @@ Not verifiable from this sandbox:
 
 The historical 2026-08-11 inventory remains useful context but is not treated as live evidence.
 
+## Privileged verification — 2026-09-13
+
+### Systemd and legacy services
+
+- `systemctl --failed`: 0 loaded failed units.
+- `ssh.service`: enabled and active/running.
+- `NetworkManager.service`: enabled and active/running.
+- `logrotate.service`: loaded/static and inactive, which is expected for a timer-triggered service; it is not failed.
+- Docker, containerd, MySQL, and RabbitMQ unit files were not found and are inactive/not installed as systemd services.
+
+### Listening sockets
+
+- SSH listens on TCP port 22 on all IPv4 and IPv6 addresses.
+- systemd-resolved stub DNS listens on loopback only.
+- CUPS listens on loopback only.
+- UDP listeners include mDNS and an additional non-identified listener; ownership requires a follow-up process-aware inspection.
+
+### Firewall
+
+UFW, nftables, iptables, and ip6tables rulesets could not be read because the trusted shell still requires an interactive sudo password. Firewall state is therefore **UNVERIFIED**, not assumed inactive or secure.
+
+### NetworkManager, routes, and DNS
+
+- NetworkManager: connected with full reported connectivity; Wi-Fi hardware and Wi-Fi are enabled.
+- Active interface: `wlp3s0` over Wi-Fi; Ethernet `enp2s0` is unavailable.
+- Multiple saved Wi-Fi profiles are set to autoconnect with default priority `0`.
+- Wired profile `Wired connection 1` is set to autoconnect priority `-999`, which does not implement the intended Ethernet-first policy.
+- A WireGuard profile `eduVPN` exists but is not set to autoconnect.
+- The active route is DHCP IPv4 with metric `600` and an IPv6 router-advertised default route over Wi-Fi.
+- DNS is provided by the current LAN router through systemd-resolved; resolved uses a loopback stub and does not enable DNSSEC or DNS-over-TLS.
+- Raw addresses, SSIDs, UUIDs, and machine identifiers are intentionally excluded from committed documentation.
+
+### Memory, swap, and zram
+
+- No swap devices are active.
+- `/proc/swaps` is empty.
+- `systemd-zram-setup@zram0.service` does not exist.
+- `vm.swappiness` is `60`.
+
+### Storage and SMART
+
+- `/dev/sda`: ADATA SU650, approximately 894 GiB, non-rotational SATA SSD.
+- Ubuntu root: `/dev/sda6`, ext4, approximately 196 GiB total, 139 GiB available, 24–26% used.
+- EFI system partition: approximately 96 MiB.
+- Two large NTFS partitions and one NTFS recovery partition remain on the same disk.
+- An optical medium is mounted under `/media`; it is full by design and is not homelab storage.
+- SMART health/attributes could not be read because `smartctl` requires root and sudo authentication was unavailable.
+
+### Temperatures
+
+Current sensor readout is within normal idle range: CPU package approximately 57°C, cores approximately 45–57°C, ACPI approximately 43°C, platform sensors approximately 36°C, and CPU fan approximately 2600 RPM. Two JC42 sensors report placeholder `0°C` high/critical thresholds and `ALARM`; these thresholds are sensor metadata anomalies, not measured over-temperature events.
+
+### Kernel modules and sysctls
+
+- `overlay`, `br_netfilter`, `vxlan`, and `nf_conntrack` are available as modules but not loaded.
+- `ip_tables` is loaded; `ip6_tables` is not loaded.
+- `net.ipv4.ip_forward=0` and `net.ipv6.conf.all.forwarding=0`.
+- Bridge netfilter and conntrack sysctls are absent because the corresponding modules are not loaded.
+- `vm.swappiness=60`.
+- `fs.inotify.max_user_instances=128` and `fs.inotify.max_user_watches=65536`.
+
+This is acceptable before k3s installation but not yet a validated k3s prerequisite state.
+
+### SSH
+
+- `sshd_config` includes `/etc/ssh/sshd_config.d/*.conf`; no drop-in files currently exist.
+- The base configuration leaves several security settings at package defaults, including password authentication, root-login policy, X11 forwarding, and TCP forwarding; effective `sshd -T` output could not be obtained in this context.
+- Runtime exposure is confirmed on `0.0.0.0:22` and `[::]:22`.
+
+### Packages and Ubuntu release readiness
+
+- `dpkg --audit` returned clean.
+- No package holds were reported by `apt-mark showhold`.
+- `apt-get check` could not run because it requires the dpkg frontend lock and sudo authentication.
+- A third-party eduVPN Jammy repository is enabled and must be reviewed for upgrade compatibility.
+- `do-release-upgrade -c` reports Ubuntu `24.04.5 LTS` available.
+
+Ubuntu 24.04 upgrade availability is confirmed. Upgrade safety is **NOT APPROVED** yet because backup/recovery, firewall state, SSH hardening, SMART health, package consistency, and third-party repository handling are incomplete or unverified.
+
+## Recommended host-change order
+
+1. Obtain an external backup and verify recovery of important personal data.
+2. Complete privileged package, firewall, SMART, and SSH effective-state verification.
+3. Inventory and decide the fate of the eduVPN repository/profile and any non-package listeners.
+4. Review current Ubuntu release notes and third-party software compatibility.
+5. Apply all available Jammy updates and resolve any package inconsistency.
+6. Configure swap or zram with a documented memory policy.
+7. Harden SSH and restrict its exposure through the host firewall.
+8. Configure NetworkManager priorities: Ethernet first, household Wi-Fi second, hotspot third.
+9. Reboot and validate clean systemd state, networking, SSH, storage, and rollback access.
+10. Perform the Ubuntu 24.04 upgrade only after the above gates pass.
+11. Re-run the full audit after the upgrade before installing k3s.
+
 ## Reconciled status
 
 ```text
