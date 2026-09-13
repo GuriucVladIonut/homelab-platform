@@ -24,7 +24,11 @@ This is not disaster recovery. Same-disk copies do not protect against physical 
 ## Gate 3 — host baseline changes
 
 - [ ] Apply Jammy updates after package consistency is confirmed.
-- [ ] Configure zram; add low-priority swapfile only if measurements require it.
+- [ ] Run `infra/scripts/host/configure-zram.sh` to configure persistent 5 GiB zram; no disk-backed swapfile is planned.
+- [x] Run `infra/scripts/host/configure-k3s-prereqs.sh` for the required modules and sysctls only.
+- [ ] Run `infra/scripts/host/configure-homelab-dirs.sh` to create the approved host directory hierarchy.
+- [ ] Run `infra/scripts/host/configure-network-priorities.sh` with Ethernet 600, household Wi-Fi 400, and hotspot 200.
+- [ ] Run `infra/scripts/host/configure-ssh-hardening.sh`; retain password authentication until authorized_keys recovery is configured.
 - [ ] Define UFW policy and confirm nftables/iptables interaction before enabling.
 - [ ] Harden SSH according to the documented policy; validate and retain recovery access.
 - [ ] Set NetworkManager priorities: Ethernet `600`, household Wi-Fi `400`, hotspot `200`.

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflare-issuer-template
+  namespace: cert-manager
+data:
+  README: >-
+    This is a gated template. Create the SOPS-encrypted Cloudflare API token
+    secret and enable the issuer only after CF-001 is complete.

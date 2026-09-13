@@ -68,4 +68,4 @@ secrets/         Encrypted secrets only
 .github/         CI workflows
 ```
 
-Current status: repository scaffold and validation tooling exist; deployable host, Kubernetes, GitOps, application, policy, and backup configuration remains to be implemented.
+Current status: host execution scripts, pinned k3s/tooling installers, GitOps scaffolding, endpoint/component registries, application source, and validation tooling are implemented in-repo. Deployment remains split-control and requires manual sudo; Cloudflare/GitHub actions remain externally gated.

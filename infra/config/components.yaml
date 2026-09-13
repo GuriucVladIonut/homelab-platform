@@ -1,0 +1,52 @@
+components:
+  - name: k3s
+    classification: MANDATORY
+    state: READY_FOR_EXECUTION
+  - name: flux
+    classification: MANDATORY
+    state: READY_FOR_EXECUTION
+  - name: traefik
+    classification: MANDATORY
+    state: READY_FOR_EXECUTION
+  - name: cert-manager
+    classification: MANDATORY
+    state: BLOCKED_EXTERNAL
+  - name: prometheus
+    classification: RECOMMENDED
+    state: READY_FOR_EXECUTION
+  - name: grafana
+    classification: RECOMMENDED
+    state: READY_FOR_EXECUTION
+  - name: kube-state-metrics
+    classification: RECOMMENDED
+    state: READY_FOR_EXECUTION
+  - name: node-exporter
+    classification: RECOMMENDED
+    state: READY_FOR_EXECUTION
+  - name: restic
+    classification: RECOMMENDED
+    state: READY_FOR_EXECUTION
+  - name: homelab-control
+    classification: MANDATORY
+    state: READY_FOR_EXECUTION
+  - name: postgresql-catalog
+    classification: OPTIONAL
+    state: OPTIONAL_DISABLED
+  - name: samba
+    classification: OPTIONAL
+    state: OPTIONAL_DISABLED
+  - name: jellyfin
+    classification: OPTIONAL
+    state: OPTIONAL_DISABLED
+  - name: navidrome
+    classification: OPTIONAL
+    state: OPTIONAL_DISABLED
+  - name: kavita
+    classification: OPTIONAL
+    state: OPTIONAL_DISABLED
+  - name: immich
+    classification: HEAVY_ON_DEMAND
+    state: OPTIONAL_DISABLED
+  - name: opensearch
+    classification: REJECTED_CURRENTLY
+    state: OPTIONAL_DISABLED

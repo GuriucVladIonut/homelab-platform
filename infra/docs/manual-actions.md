@@ -1,36 +1,12 @@
 # Manual Actions
 
-| ID | Status | Reason | User action | Verification after completion |
-|---|---|---|---|---|
-| CF-001 | BLOCKED | No Cloudflare credential was provided and API access was not verifiable locally | Create a scoped Cloudflare API token limited to the `gvlad.dev` zone with only the minimum DNS permissions required for cert-manager DNS-01. Do not create a Global API Key. Do not paste the token into chat, Markdown, Git, or shell history. | Codex validates access with a non-secret zone read, then places the token into the SOPS + age workflow |
-| HOST-001 | BLOCKED | The execution container rejects sudo under `no_new_privileges`; host-level escalation reached a password prompt that this interface cannot answer | Run the repository preflight and Phase B remediation from a trusted host shell with interactive sudo access | Reconcile service, route, firewall, socket, SMART, SSH, zram, NetworkManager, kernel, and post-reboot state |
-| DATA-001 | ACCEPTED RISK | User explicitly does not want an external backup device, new disk, network storage, repartitioning, or personal-data relocation in this phase | No action required for the Phase B gate; do not create large same-disk media archives | Future external backup remains recommended; same-disk copies are not disaster recovery |
+| ID | Status | Action |
+|---|---|---|
+| GITHUB-001 | BLOCKED_EXTERNAL | Authenticate the platform Git remote securely; do not place a PAT in Markdown or Git. |
+| CF-001 | BLOCKED_EXTERNAL | Create a least-privilege Cloudflare API token restricted to the `gvlad.dev` zone and DNS edit permissions required for DNS-01. Never use the Global API Key. |
+| CF-002 | BLOCKED_EXTERNAL | Perform a read-only inventory of the three existing Cloudflare deployments/resources. Do not modify them. |
+| CF-003 | BLOCKED_EXTERNAL | Approve any desired mapping of existing resources to `gvlad.dev`; no Cloudflare apply is prepared or authorized. |
+| SSH-001 | BLOCKED_EXTERNAL | Enroll and test a remote SSH public key before any future change to disable password authentication. |
+| REBOOT-001 | READY_FOR_EXECUTION | Run the single reboot gate in `infra/docs/execution-batch-runbook.md` after Batch 1 validation passes. |
 
-## Required authenticated commands
-
-Run locally in a trusted terminal. These are read-only, but outputs can contain addresses, interface names, package sources, or usernames.
-
-```bash
-sudo ufw status verbose
-sudo nft list ruleset
-sudo iptables-save
-sudo smartctl -a /dev/sda
-sudo sshd -T
-sudo apt-get check
-sudo ss -lntup
-sudo lsof -nP -i
-```
-
-Also inspect repository, NetworkManager, and SSH configuration without changing it:
-
-```bash
-grep -RhsE '^[[:space:]]*deb([[:space:]]|$)' /etc/apt/sources.list /etc/apt/sources.list.d
-nmcli -f NAME,TYPE,AUTOCONNECT,AUTOCONNECT-PRIORITY connection show
-grep -RnsE '^[[:space:]]*(Port|ListenAddress|PermitRootLogin|PasswordAuthentication|KbdInteractiveAuthentication|PubkeyAuthentication|AuthenticationMethods|AllowUsers|AllowGroups|X11Forwarding|AllowTcpForwarding|GatewayPorts|MaxAuthTries|MaxSessions|LoginGraceTime|ClientAliveInterval|ClientAliveCountMax|UsePAM)[[:space:]]+' /etc/ssh/sshd_config /etc/ssh/sshd_config.d
-```
-
-## Cloudflare dashboard path
-
-`Cloudflare → My Profile → API Tokens → Create Token → Custom token`
-
-Restrict the token to the `gvlad.dev` zone and the minimum DNS permissions required by the selected cert-manager integration. Store it locally through the documented SOPS workflow. The token value must never be committed or pasted into Markdown.
+No external account action is required for local repository implementation or host scripts. Never paste credentials into chat, Markdown, Git, shell history, or logs.

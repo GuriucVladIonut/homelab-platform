@@ -112,12 +112,20 @@ Current sensor readout is within normal idle range: CPU package approximately 57
 
 - `overlay`, `br_netfilter`, `vxlan`, and `nf_conntrack` are available as modules but not loaded.
 - `ip_tables` is loaded; `ip6_tables` is not loaded.
-- `net.ipv4.ip_forward=0` and `net.ipv6.conf.all.forwarding=0`.
-- Bridge netfilter and conntrack sysctls are absent because the corresponding modules are not loaded.
+- Before remediation, `net.ipv4.ip_forward=0` and bridge netfilter sysctls were not enabled.
+- The Phase B prerequisite script now intentionally enables only the documented k3s forwarding and bridge-netfilter sysctls.
 - `vm.swappiness=60`.
 - `fs.inotify.max_user_instances=128` and `fs.inotify.max_user_watches=65536`.
 
-This is acceptable before k3s installation but not yet a validated k3s prerequisite state.
+The zram remediation script completed successfully on the host: `/dev/zram0` is active at 5 GiB with priority 100 and no disk-backed swapfile. Persistence still requires the planned post-reboot validation.
+
+The k3s prerequisite script completed successfully: `overlay` and `br_netfilter` are loaded, and `net.ipv4.ip_forward`, `net.bridge.bridge-nf-call-iptables`, and `net.bridge.bridge-nf-call-ip6tables` are applied at `1`. Persistence still requires the planned post-reboot validation.
+
+The homelab directory script completed successfully. The requested `/srv/homelab` and `/opt/homelab` hierarchy exists with root ownership and conservative permissions. Persistence and later workload-specific ownership remain subject to post-reboot validation.
+
+The NetworkManager priority script completed without disconnecting the active connection: Ethernet is `600`, household Wi-Fi profiles are `400`, and the phone hotspot profile is `200`. The script did not cycle any connection.
+
+These host changes are verified from user-provided execution output, but reboot persistence and firewall activation remain outstanding. The repository-side implementation is described in `docs/implementation-status.md`; k3s remains not installed.
 
 ### SSH
 

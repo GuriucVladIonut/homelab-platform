@@ -1,0 +1,82 @@
+endpoints:
+  - name: control.homelab.gvlad.dev
+    category: control
+    namespace: homelab-system
+    exposure: private
+    private_url: https://control.homelab.gvlad.dev
+    public_url: null
+    health_path: /healthz
+    documentation: docs/components/homelab-control.md
+    enabled: false
+  - name: grafana.homelab.gvlad.dev
+    category: observability
+    namespace: observability
+    exposure: private
+    private_url: https://grafana.homelab.gvlad.dev
+    public_url: null
+    health_path: /api/health
+    documentation: docs/components/observability.md
+    enabled: false
+  - name: git.homelab.gvlad.dev
+    category: git
+    namespace: git
+    exposure: private
+    private_url: https://git.homelab.gvlad.dev
+    public_url: null
+    health_path: /
+    documentation: docs/architecture/dns.md
+    enabled: false
+  - name: dns.homelab.gvlad.dev
+    category: dns
+    namespace: dns
+    exposure: private
+    private_url: https://dns.homelab.gvlad.dev
+    public_url: null
+    health_path: /
+    documentation: docs/architecture/dns.md
+    enabled: false
+  - name: media.homelab.gvlad.dev
+    category: media
+    namespace: media
+    exposure: private
+    private_url: https://media.homelab.gvlad.dev
+    public_url: null
+    health_path: /
+    documentation: docs/components/media.md
+    enabled: false
+  - name: music.homelab.gvlad.dev
+    category: media
+    namespace: media
+    exposure: private
+    private_url: https://music.homelab.gvlad.dev
+    public_url: null
+    health_path: /
+    documentation: docs/components/media.md
+    enabled: false
+  - name: books.homelab.gvlad.dev
+    category: media
+    namespace: media
+    exposure: private
+    private_url: https://books.homelab.gvlad.dev
+    public_url: null
+    health_path: /
+    documentation: docs/components/media.md
+    enabled: false
+  - name: photos.homelab.gvlad.dev
+    category: media
+    namespace: media
+    exposure: private
+    private_url: https://photos.homelab.gvlad.dev
+    public_url: null
+    health_path: /
+    documentation: docs/components/media.md
+    enabled: false
+  - name: siem.homelab.gvlad.dev
+    category: security
+    namespace: security
+    exposure: private
+    private_url: https://siem.homelab.gvlad.dev
+    public_url: null
+    health_path: /
+    documentation: docs/components/observability.md
+    enabled: false
