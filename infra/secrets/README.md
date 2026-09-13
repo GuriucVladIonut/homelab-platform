@@ -1,5 +1,17 @@
 # Encrypted Secrets
 
-Secrets are encrypted with SOPS and age before they enter Git. The placeholder recipient in `.sops.yaml` must be replaced locally with the operator's real age public key before encrypting any file. Never commit an age private key, plaintext token, kubeconfig credential, or household password.
+Secrets are encrypted with SOPS and age before they enter Git. The placeholder
+recipient in `.sops.yaml` must be replaced locally with the operator's real age
+public key before encrypting any file. Never commit an age private key,
+plaintext token, kubeconfig credential, or household password.
 
-Cloudflare DNS-01 remains gated on manual action CF-001. Flux bootstrap remains gated on GitHub authentication and is not claimed successful by this repository.
+The prepared Cloudflare secret is
+`infra/infrastructure/cert-manager/staging/cloudflare-api-token.sops.yaml`. Its
+Kubernetes name is `cloudflare-api-token` in namespace `cert-manager`, with key
+`api-token`. The example input is under `infra/secrets/templates/` and is never
+reconciled.
+
+Cloudflare DNS-01 remains gated on manual action CF-001 and the presence of the
+encrypted Secret. The staging ClusterIssuer and wildcard Certificate are under
+`infra/infrastructure/cert-manager/staging/` and are intentionally excluded
+from the live Flux root until the secret is available.

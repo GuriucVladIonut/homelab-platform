@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: homelab-wildcard-staging
+  namespace: ingress
+spec:
+  secretName: homelab-wildcard-staging-tls
+  issuerRef:
+    name: letsencrypt-staging-cloudflare
+    kind: ClusterIssuer
+  dnsNames:
+    - homelab.gvlad.dev
+    - '*.homelab.gvlad.dev'

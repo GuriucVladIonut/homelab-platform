@@ -1,3 +1,3 @@
 creation_rules:
-  - path_regex: 'infra/secrets/.*\.sops\.(yaml|json)$'
+  - path_regex: 'infra/(secrets/.*|infrastructure/cert-manager/staging/.*)\.sops\.(yaml|json)$'
     age: 'age1replace-with-a-real-public-recipient'

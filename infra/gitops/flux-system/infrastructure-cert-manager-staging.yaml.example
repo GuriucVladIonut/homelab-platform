@@ -1,0 +1,27 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infrastructure-cert-manager-staging
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  dependsOn:
+    - name: infrastructure-cert-manager-config
+  path: ./infra/infrastructure/cert-manager/staging
+  prune: true
+  wait: true
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+  healthChecks:
+    - apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      name: letsencrypt-staging-cloudflare
+    - apiVersion: cert-manager.io/v1
+      kind: Certificate
+      name: homelab-wildcard-staging
+      namespace: ingress
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
