@@ -1,0 +1,23 @@
+name: validate
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-go@v5.5.0
+        with:
+          go-version: '1.22.x'
+      - name: Install validators
+        run: |
+          python3 -m pip install --user yamllint
+          go install github.com/zegl/kube-score@v1.20.0
+      - name: Markdown, secrets, shell syntax
+        run: ./infra/scripts/validation/validate-platform.sh
+      - name: Go tests
+        run: |
+          go test ./apps/homelab-control ./apps/catalog
