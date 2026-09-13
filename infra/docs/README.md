@@ -6,6 +6,8 @@
 - [Networking](architecture/networking.md)
 - [Storage](architecture/storage.md)
 - [Remote Access](architecture/remote-access.md)
+- [Resource Budget](architecture/resource-budget.md)
+- [Current State](current-state.md)
 
 ## Components
 
@@ -26,3 +28,8 @@ Security design and operating policies live in `docs/security/`.
 ## Disaster Recovery
 
 Recovery procedures live in `docs/disaster-recovery/`.
+
+## Operations
+
+- [Manual Actions](manual-actions.md)
+- [Cloudflare Existing Resources](cloudflare/existing-resources.md)

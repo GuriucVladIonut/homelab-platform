@@ -1,12 +1,14 @@
 # Homelab Infrastructure
 
-Technical source-of-truth repository for the `gvlad.dev` homelab.
+Current executable implementation subtree of the `homelab-platform` Git repository for the `gvlad.dev` homelab.
+
+The Git root is the parent directory, `homelab-platform/`. This subtree is retained in its current location during reconciliation; paths below are relative to `infra/`.
 
 ## Scope
 
 This repository contains executable infrastructure configuration and technical operational documentation.
 
-The separate Obsidian repository contains the learning journal, planning, brainstorming, and chronological implementation history.
+The separate Obsidian repository contains architecture reasoning, learning, planning, brainstorming, incidents, runbooks, and chronological implementation history.
 
 ## Target Platform
 
@@ -65,3 +67,5 @@ docs/            Technical documentation
 secrets/         Encrypted secrets only
 .github/         CI workflows
 ```
+
+Current status: repository scaffold and validation tooling exist; deployable host, Kubernetes, GitOps, application, policy, and backup configuration remains to be implemented.
