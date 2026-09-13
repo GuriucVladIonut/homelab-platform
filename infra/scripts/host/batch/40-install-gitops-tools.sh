@@ -14,7 +14,8 @@ step 'Install SOPS'
 sops_asset="sops-${SOPS_VERSION}.linux.amd64"
 curl --fail --location --proto '=https' --tlsv1.2 -o "$tmpdir/sops" "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/$sops_asset"
 curl --fail --location --proto '=https' --tlsv1.2 -o "$tmpdir/sops.sha" "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.checksums.txt"
-grep -E "[[:space:]]${sops_asset}$" "$tmpdir/sops.sha" > "$tmpdir/one.sha" || fail 'SOPS checksum entry missing'
+awk -v asset="$sops_asset" '$2 == asset {print $1 "  sops"}' "$tmpdir/sops.sha" > "$tmpdir/one.sha" || true
+[[ -s "$tmpdir/one.sha" ]] || fail 'SOPS checksum entry missing'
 (cd "$tmpdir" && sha256sum --check one.sha) || fail 'SOPS checksum failed'
 install -m 0755 "$tmpdir/sops" /usr/local/bin/sops
 step 'Install age'

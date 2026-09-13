@@ -7,8 +7,13 @@ step() { printf '\n===== %s =====\n' "$1"; }
 fail() { printf 'ERROR: %s\n' "$1" >&2; exit 1; }
 step 'Validate prerequisites'
 [[ "$(id -u)" -eq 0 ]] || fail 'run with sudo'
-for command_name in go systemctl visudo useradd groupadd getent id install ss; do command -v "$command_name" >/dev/null || fail "missing $command_name"; done
+for command_name in apt-get systemctl visudo useradd groupadd getent id install ss; do command -v "$command_name" >/dev/null || fail "missing $command_name"; done
 [[ -f "$ROOT_DIR/apps/homelab-control/go.mod" ]] || fail 'control source missing'
+if ! command -v go >/dev/null; then
+  step 'Install Go build dependency'
+  apt-get install --yes golang-go
+fi
+command -v go >/dev/null || fail 'Go toolchain is still unavailable after package installation'
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 step 'Build application'
