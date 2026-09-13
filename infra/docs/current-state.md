@@ -133,6 +133,77 @@ This is acceptable before k3s installation but not yet a validated k3s prerequis
 
 Ubuntu 24.04 upgrade availability is confirmed. Upgrade safety is **NOT APPROVED** yet because backup/recovery, firewall state, SSH hardening, SMART health, package consistency, and third-party repository handling are incomplete or unverified.
 
+## Finding classification
+
+| Finding | Classification | Required disposition |
+|---|---|---|
+| No failed systemd units | Safe | Preserve as a pre-change baseline |
+| SSH and NetworkManager enabled/running | Safe | Keep; harden SSH before upgrade |
+| Legacy Docker/containerd/MySQL/RabbitMQ units absent | Safe | Confirm no user workloads depend on them |
+| SSH exposed on all IPv4/IPv6 addresses | Needs remediation; upgrade blocker | Restrict authentication and firewall exposure |
+| Loopback-only resolved/CUPS listeners | Safe | Recheck after firewall changes |
+| Spotify listeners on wildcard ports | Needs remediation | Confirm desktop-only scope; prevent unwanted LAN exposure |
+| Wi-Fi active; Ethernet unavailable | Safe | Use for audit only; test priority changes later |
+| Wired profile priority `-999` | Needs remediation | Set explicit uplink priorities |
+| No swap/zram | Needs remediation; upgrade blocker | Add zram or swap before memory-sensitive platform work |
+| Root ext4 has approximately 139 GiB free | Safe | Reserve capacity; do not use Windows partitions |
+| SMART health unavailable | Upgrade blocker | Obtain authenticated SMART report |
+| k3s modules available but unloaded | Safe before k3s | Load/configure during k3s host preparation |
+| Forwarding and bridge sysctls not enabled | Safe before k3s | Configure only with k3s implementation |
+| `dpkg --audit` clean; no holds | Safe | Recheck after authenticated apt check |
+| `apt-get check` unavailable | Upgrade blocker | Run authenticated check |
+| eduVPN third-party Jammy source enabled | Needs remediation; upgrade blocker | Test compatibility; disable/remove only after user decision |
+| Ubuntu 24.04.5 offered | Safe availability signal | Do not upgrade until all gates pass |
+| Firewall rules unavailable | Upgrade blocker | Obtain authenticated UFW/nftables/iptables reports |
+
+## Swap/zram decision
+
+Use zram initially, sized at approximately 25–50% of RAM, with a low-priority backing swapfile only if later workload measurements justify it. For this 16 GiB laptop, zram reduces SSD write pressure while protecting against short memory spikes. It is not additional capacity or a substitute for Kubernetes requests/limits.
+
+## Proposed SSH policy — not applied
+
+- Keep SSH reachable only on the private LAN and authenticated overlay; no public exposure.
+- Keep `Port 22` initially to avoid unnecessary access risk during migration.
+- `PermitRootLogin no`.
+- `PasswordAuthentication no`.
+- `KbdInteractiveAuthentication no`.
+- `PubkeyAuthentication yes`.
+- `AuthenticationMethods publickey`.
+- `PermitEmptyPasswords no`.
+- `X11Forwarding no`.
+- `AllowTcpForwarding no` by default; document narrow exceptions.
+- `GatewayPorts no`.
+- `PermitTunnel no`.
+- `AllowAgentForwarding no` unless required.
+- `MaxAuthTries 3`, `LoginGraceTime 20s`, `MaxSessions 10`.
+- `ClientAliveInterval 300`, `ClientAliveCountMax 2`.
+- Use `AllowGroups ssh-admin` only after membership and recovery access are verified.
+- Validate with `sshd -t` and `sshd -T` before restart; retain an existing session during testing.
+
+## Proposed NetworkManager priorities — not applied
+
+```text
+Ethernet profile:          600
+Household Wi-Fi profiles:  400
+Phone hotspot profile:     200
+Other/temporary profiles:    0 or lower
+eduVPN WireGuard:            0, autoconnect disabled
+```
+
+Exact profile names must be confirmed before applying changes. All household Wi-Fi profiles receive the same class priority; the hotspot profile must be identified explicitly.
+
+## Upgrade backup requirements
+
+- External target with enough capacity; it must not be `/dev/sda`.
+- Obsidian and `homelab-platform` repositories, including intended uncommitted work.
+- `/etc`, especially SSH, NetworkManager, apt sources/preferences, UFW, systemd overrides, mounts, and user service configuration.
+- `/home/jamal` data and application configuration within the chosen retention scope.
+- Package inventories and manually installed package lists.
+- Partition layout, filesystem UUIDs, and boot configuration.
+- Local-console/recovery access, SSH keys, sudo access, and recovery media.
+- Application-consistent database dumps if services/databases exist before upgrade.
+- Verified restoration of representative files and repository history.
+
 ## Recommended host-change order
 
 1. Obtain an external backup and verify recovery of important personal data.
