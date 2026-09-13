@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - issuer-staging.yaml
   - certificate-staging.yaml
-  # Add cloudflare-api-token.sops.yaml only after it has been encrypted.
+  - cloudflare-api-token.sops.yaml

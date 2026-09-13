@@ -12,6 +12,7 @@ Kubernetes name is `cloudflare-api-token` in namespace `cert-manager`, with key
 reconciled.
 
 Cloudflare DNS-01 remains gated on manual action CF-001 and the presence of the
-encrypted Secret. The staging ClusterIssuer and wildcard Certificate are under
-`infra/infrastructure/cert-manager/staging/` and are intentionally excluded
-from the live Flux root until the secret is available.
+encrypted Secret plus the out-of-band `flux-system/sops-age` Secret. The
+staging ClusterIssuer and wildcard Certificate are under
+`infra/infrastructure/cert-manager/staging/` and are wired into the live Flux
+root.

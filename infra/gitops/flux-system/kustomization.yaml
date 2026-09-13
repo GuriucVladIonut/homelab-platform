@@ -7,4 +7,5 @@ resources:
   - infrastructure-traefik-config.yaml
   - infrastructure-cert-manager.yaml
   - infrastructure-cert-manager-config.yaml
+  - infrastructure-cert-manager-staging.yaml
   - infrastructure-observability.yaml

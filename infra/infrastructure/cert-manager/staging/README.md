@@ -1,7 +1,7 @@
 # Staging DNS-01 activation
 
-Status: `READY_FOR_EXECUTION`, intentionally excluded from the live Flux root
-until the encrypted Cloudflare Secret exists.
+Status: `READY_FOR_EXECUTION`, wired into the live Flux root and gated by the
+out-of-band `flux-system/sops-age` decryption Secret.
 
 The staging resources use cert-manager's Let's Encrypt staging directory and
 Cloudflare DNS-01. They request both `homelab.gvlad.dev` and
@@ -26,7 +26,8 @@ The committed encrypted file must be:
 
 `infra/infrastructure/cert-manager/staging/cloudflare-api-token.sops.yaml`
 
-The file is intentionally absent from Git until it is encrypted.
+Only the encrypted file belongs in Git; the plaintext input must never be
+committed.
 
 Prepare the age identity and replace the placeholder recipient in `.sops.yaml`
 with the resulting public recipient. Keep the private identity outside Git:
@@ -56,8 +57,8 @@ In the editor, replace only
 Review only the encrypted file structure; do not run `sops -d` into a file or
 commit the age private key.
 
-After the encrypted file exists, add it to this directory's Kustomization and
-activate the prepared `infrastructure-cert-manager-staging` Flux Kustomization.
+The staging Kustomization already references the encrypted file and is active
+in the live Flux root.
 That Kustomization uses Flux SOPS decryption with an out-of-band `sops-age`
 Secret in `flux-system`; neither the private age key nor the Cloudflare token
 belongs in Git.

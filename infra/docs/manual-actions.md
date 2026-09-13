@@ -17,9 +17,9 @@ After CF-001, create the encrypted Secret locally and review it without
 printing decrypted contents. The exact input shape is
 `infra/secrets/templates/cloudflare-api-token.secret.yaml.example`; the
 encrypted output must be
-`infra/secrets/cloudflare-api-token.sops.yaml`.
+`infra/infrastructure/cert-manager/staging/cloudflare-api-token.sops.yaml`.
 
-Only after the encrypted Secret exists should the staging Flux Kustomization be
-added to the live root. The staging issuer uses Let's Encrypt's staging ACME
+The staging Flux Kustomization is already wired to the live root. The cluster
+also needs the out-of-band `flux-system/sops-age` Secret. The staging issuer uses Let's Encrypt's staging ACME
 directory and requests `homelab.gvlad.dev` plus
 `*.homelab.gvlad.dev`. No public service records are created.
