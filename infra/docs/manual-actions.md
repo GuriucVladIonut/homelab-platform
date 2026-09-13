@@ -4,7 +4,7 @@
 |---|---|---|---|---|
 | CF-001 | BLOCKED | No Cloudflare credential was provided and API access was not verifiable locally | Create a scoped Cloudflare API token limited to the `gvlad.dev` zone with only the minimum DNS permissions required for cert-manager DNS-01. Do not create a Global API Key. Do not paste the token into chat, Markdown, Git, or shell history. | Codex validates access with a non-secret zone read, then places the token into the SOPS + age workflow |
 | HOST-001 | BLOCKED | Privileged systemd, netlink, and firewall state is unavailable in the current sandbox | Run the repository preflight from a trusted host shell with required sudo access, or provide equivalent command output without secrets | Codex reconciles service, route, firewall, socket, SMART, and thermal state |
-| DATA-001 | ACCEPTED RISK | User explicitly does not want an external backup device, new disk, network storage, repartitioning, or personal-data relocation in this phase | No action required for the current upgrade gate; do not create large same-disk media archives | Future external backup remains recommended; same-disk copies are not disaster recovery |
+| DATA-001 | ACCEPTED RISK | User explicitly does not want an external backup device, new disk, network storage, repartitioning, or personal-data relocation in this phase | No action required for the Phase B gate; do not create large same-disk media archives | Future external backup remains recommended; same-disk copies are not disaster recovery |
 
 ## Required authenticated commands
 

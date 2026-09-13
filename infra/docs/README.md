@@ -8,6 +8,7 @@
 - [Remote Access](architecture/remote-access.md)
 - [Resource Budget](architecture/resource-budget.md)
 - [Current State](current-state.md)
+- [Phase B Remediation Checklist](phase-b-remediation-checklist.md)
 
 ## Components
 

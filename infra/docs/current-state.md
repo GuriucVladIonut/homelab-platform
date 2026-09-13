@@ -131,7 +131,7 @@ This is acceptable before k3s installation but not yet a validated k3s prerequis
 - A third-party eduVPN Jammy repository is enabled and must be reviewed for upgrade compatibility.
 - `do-release-upgrade -c` reports Ubuntu `24.04.5 LTS` available.
 
-Ubuntu 24.04 upgrade availability is confirmed. The user explicitly accepts the risk that no external backup device or second physical disk is available in this phase. Same-disk copies are not disaster recovery and do not protect against physical disk failure. Future backup capability remains recommended, but lack of external backup is no longer an upgrade blocker.
+Supported host baseline is explicitly fixed at Ubuntu 22.04.5 LTS with the 6.8.x kernel line. Ubuntu 24.04 migration is removed from the active implementation path and must not be run. The user explicitly accepts the risk that no external backup device or second physical disk is available in this phase. Same-disk copies are not disaster recovery and do not protect against physical disk failure. Future backup capability remains recommended, but lack of external backup is not a Phase B blocker.
 
 ## Finding classification
 
@@ -147,14 +147,14 @@ Ubuntu 24.04 upgrade availability is confirmed. The user explicitly accepts the 
 | Wired profile priority `-999` | Needs remediation | Set explicit uplink priorities |
 | No swap/zram | Needs remediation | Add zram or swap before memory-sensitive platform work |
 | Root ext4 has approximately 139 GiB free | Safe | Reserve capacity; do not use Windows partitions |
-| SMART health unavailable | Upgrade blocker | Obtain authenticated SMART report |
+| SMART health unavailable | Needs remediation | Obtain authenticated SMART report |
 | k3s modules available but unloaded | Safe before k3s | Load/configure during k3s host preparation |
 | Forwarding and bridge sysctls not enabled | Safe before k3s | Configure only with k3s implementation |
 | `dpkg --audit` clean; no holds | Safe | Recheck after authenticated apt check |
-| `apt-get check` unavailable | Upgrade blocker | Run authenticated check |
-| eduVPN third-party Jammy source enabled | Needs remediation; upgrade blocker | Test compatibility; disable/remove only after user decision |
-| Ubuntu 24.04.5 offered | Safe availability signal | Do not upgrade until all gates pass |
-| Firewall rules unavailable | Upgrade blocker | Obtain authenticated UFW/nftables/iptables reports |
+| `apt-get check` unavailable | Needs remediation | Run authenticated check |
+| eduVPN third-party Jammy source enabled | Needs remediation | Review purpose; do not remove without approval |
+| Ubuntu 24.04.5 offered | Safe but out of scope | Do not run `do-release-upgrade` |
+| Firewall rules unavailable | Needs remediation | Obtain authenticated UFW/nftables/iptables reports |
 
 ## Swap/zram decision
 
@@ -200,9 +200,9 @@ The user has accepted the following risk for the current phase:
 - The current physical disk, partition table, Windows/NTFS partitions, and filesystem layout remain unchanged.
 - Same-disk copies do not protect against physical disk failure, theft, or total filesystem loss.
 - This is **not disaster recovery**.
-- Future external or network-backed backup capability remains recommended, but is not an upgrade blocker for this phase.
+- Future external or network-backed backup capability remains recommended, but is not a Phase B blocker.
 
-Local pre-upgrade safety measures are limited to configuration/evidence capture and repository commits. Do not create archives of large personal media/data merely to duplicate them on the same disk.
+Ubuntu release migration is not an active operation. Local safety measures are limited to configuration/evidence capture and repository commits. Do not create archives of large personal media/data merely to duplicate them on the same disk.
 
 Required local capture:
 
@@ -224,8 +224,8 @@ Required local capture:
 7. Harden SSH and restrict its exposure through the host firewall.
 8. Configure NetworkManager priorities: Ethernet first, household Wi-Fi second, hotspot third.
 9. Reboot and validate clean systemd state, networking, SSH, storage, and recovery access.
-10. Perform the Ubuntu 24.04 upgrade only after the remaining gates pass.
-11. Re-run the full audit after the upgrade before installing k3s.
+10. Keep Ubuntu on the supported 22.04.5 LTS / 6.8.x baseline.
+11. Re-run the full audit before installing k3s.
 
 ## Reconciled status
 

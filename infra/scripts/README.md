@@ -11,6 +11,8 @@ validation/     tests/preflight checks
 cleanup/        removal/cleanup helpers
 ```
 
+The Phase 00 preflight inventory script is `scripts/inventory/phase-00-preflight.sh`. It is read-only, writes its report under the invoking user's home directory, and must not be used to commit raw identifiers or secrets.
+
 ## Bash Standard
 
 Prefer:

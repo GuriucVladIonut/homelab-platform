@@ -1,6 +1,6 @@
 # Phase B — Host Remediation Checklist
 
-This prepares the laptop for Ubuntu 24.04 and later k3s installation. It is not permission to execute the changes. Manual items require authenticated sudo or an explicit decision.
+This prepares the laptop on the fixed Ubuntu 22.04.5 LTS / 6.8.x baseline for later k3s installation. Ubuntu release migration is out of scope. It is not permission to execute the changes. Manual items require authenticated sudo or an explicit decision.
 
 ## Gate 1 — evidence and access
 
@@ -19,7 +19,7 @@ This prepares the laptop for Ubuntu 24.04 and later k3s installation. It is not 
 - [x] Verify at least 30 GiB free on the Ubuntu filesystem; approximately 140 GiB is currently available.
 - [ ] Record recovery access and preserve user-created configuration files where appropriate.
 
-This is not disaster recovery. Same-disk copies do not protect against physical disk failure. Future external backup remains recommended but is not an upgrade blocker.
+This is not disaster recovery. Same-disk copies do not protect against physical disk failure. Future external backup remains recommended but is not a Phase B blocker.
 
 ## Gate 3 — host baseline changes
 
@@ -30,12 +30,13 @@ This is not disaster recovery. Same-disk copies do not protect against physical 
 - [ ] Set NetworkManager priorities: Ethernet `600`, household Wi-Fi `400`, hotspot `200`.
 - [ ] Configure power behavior, time synchronization, and `/srv/homelab` only after ownership review.
 
-## Gate 4 — upgrade readiness
+## Gate 4 — host foundation readiness
 
 - [ ] Re-run failed-unit, firewall, socket, SMART, and thermal checks.
 - [ ] Run `apt-get check`; confirm no holds or broken packages.
 - [ ] Review/disable third-party repositories according to an explicit decision.
-- [ ] Confirm `do-release-upgrade -c`, local safety capture, and recovery access.
+- [x] Record accepted supported baseline: Ubuntu 22.04.5 LTS / kernel 6.8.x; do not run `do-release-upgrade`.
+- [ ] Confirm local safety capture and recovery access.
 
 ## Gate 5 — after upgrade
 
