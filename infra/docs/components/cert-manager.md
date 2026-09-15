@@ -28,8 +28,8 @@
 
 cert-manager issues and renews Kubernetes TLS certificates. The controller is
 deployed by Flux, while Cloudflare DNS-01 activation is staged separately.
-Current state: `DEPLOYED`; DNS-01 state: `READY_FOR_EXECUTION` pending CF-001
-and encrypted secret setup.
+Current state: `DEPLOYED`; staging DNS-01 wildcard state: `VALIDATED`.
+Production ACME remains intentionally disabled.
 
 ## Role in the Stack
 
@@ -69,8 +69,10 @@ resources:
 
 ### DNS
 
-No public service records are created by cert-manager. The staging certificate
-covers `homelab.gvlad.dev` and `*.homelab.gvlad.dev`.
+No public service records are created by cert-manager. The central ingress
+certificate covers `homelab.gvlad.dev` and `*.homelab.gvlad.dev` in namespace
+`ingress`. Traefik consumes it through the default `TLSStore`; application
+namespaces do not create duplicate wildcard certificates.
 
 ### Ports
 
@@ -85,9 +87,9 @@ Cloudflare token is a SOPS-encrypted Secret and is not stored in plaintext.
 
 ## Security
 
-The token is restricted to the `gvlad.dev` zone. The issuer is not activated
-until the token Secret and Flux SOPS decryption key are supplied. Production
-ACME is not configured until staging succeeds.
+The token is restricted to the `gvlad.dev` zone. The staging issuer is active
+because the token Secret and Flux SOPS decryption key were supplied securely.
+Production ACME is not configured.
 
 ## Secrets
 
@@ -103,9 +105,9 @@ Never insert real credentials. Use placeholders only.
 
 ### Install
 
-The controller is reconciled by `infrastructure-cert-manager`. Staging is
-intentionally not in the live Flux root; follow `CF-001` and the staging README
-before activation.
+The controller is reconciled by `infrastructure-cert-manager`. The staging
+issuer and central ingress certificate are reconciled by the staging Flux
+Kustomization.
 
 ## Configuration
 

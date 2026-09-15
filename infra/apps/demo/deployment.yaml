@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: whoami
-  namespace: demo
+  namespace: validation
 spec:
   replicas: 1
   selector:
@@ -15,6 +15,8 @@ spec:
     spec:
       automountServiceAccountToken: false
       securityContext:
+        runAsUser: 65532
+        runAsGroup: 65532
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
@@ -22,9 +24,10 @@ spec:
         - name: whoami
           image: traefik/whoami:v1.10.3
           imagePullPolicy: IfNotPresent
+          args: ["--port=8080"]
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

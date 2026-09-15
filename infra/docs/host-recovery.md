@@ -25,21 +25,23 @@ The root kubeconfig is never weakened or modified. Use:
 export KUBECONFIG="$HOME/.kube/config-homelab"
 ```
 
-If the k3s client continues to emit a permission warning while starting, it is
-from the k3s wrapper inspecting its root-only config drop-in directory, not a
-permission change made by this workflow. The operator kubeconfig remains the
-correct credential boundary; an upstream kubectl client can be evaluated later
-if warning-free output is required.
+If the k3s client emits a permission warning while starting, it is from the
+k3s multicall wrapper inspecting its root-only config drop-in directory, not a
+permission change made by this workflow. The standalone upstream kubectl
+script below is the normal operator client and leaves `/usr/local/bin/k3s`
+untouched.
 
 `35-install-standalone-kubectl.sh` installs the pinned upstream Kubernetes
 `v1.36.4` client after checksum verification. It replaces only the
 `/usr/local/bin/kubectl` symlink when that symlink resolves to k3s; the k3s
 binary and root-only configuration remain untouched. Helm, Flux, and k9s use
-the same private operator kubeconfig.
+the same private operator kubeconfig. The script is `READY_FOR_EXECUTION` until
+run by the operator; afterward verify that kubectl no longer resolves to k3s
+and that normal-user commands produce no root-config warning.
 
 ## Post-reboot validation
 
 `21-platform-recovery-validation.sh` is read-only and checks systemd, zram,
-UFW, k3s, Flux, Traefik, cert-manager, observability, the demo workload, and
-the staging certificate. A reboot is never automated by a configuration
-script.
+UFW, k3s, Flux, Traefik, cert-manager, observability, the central staging
+certificate, and the disposable validation workload. A reboot is never
+automated by a configuration script.

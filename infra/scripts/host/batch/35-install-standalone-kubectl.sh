@@ -23,7 +23,10 @@ tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
 curl --fail --location --proto '=https' --tlsv1.2 -o "$tmpdir/kubectl" "$BASE_URL/kubectl"
 curl --fail --location --proto '=https' --tlsv1.2 -o "$tmpdir/kubectl.sha256" "$BASE_URL/kubectl.sha256"
-(cd "$tmpdir" && sha256sum --check kubectl.sha256) || fail 'kubectl checksum verification failed'
+expected=$(tr -d '[:space:]' <"$tmpdir/kubectl.sha256")
+[[ $expected =~ ^[0-9a-fA-F]{64}$ ]] || fail 'kubectl checksum has unexpected format'
+actual=$(sha256sum "$tmpdir/kubectl" | awk '{print $1}')
+[[ $expected == "$actual" ]] || fail 'kubectl checksum verification failed'
 step 'Install standalone kubectl'
 if [[ -L /usr/local/bin/kubectl && $(readlink -f /usr/local/bin/kubectl) == /usr/local/bin/k3s ]]; then
   rm -f /usr/local/bin/kubectl

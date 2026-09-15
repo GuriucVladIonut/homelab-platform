@@ -2,12 +2,12 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: whoami
-  namespace: demo
+  namespace: validation
 spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`demo.homelab.gvlad.dev`)
+    - match: Host(`validation.homelab.gvlad.dev`)
       kind: Rule
       middlewares:
         - name: security-headers
@@ -15,5 +15,4 @@ spec:
       services:
         - name: whoami
           port: 80
-  tls:
-    secretName: homelab-wildcard-staging-tls
+  tls: {}

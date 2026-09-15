@@ -31,8 +31,8 @@ spec:
     # Chart 70.4.2 otherwise renders an IPv6-bracketed listen address from
     # HOST_IP=0.0.0.0, leaving the host-networked exporter unreachable.
     prometheus-node-exporter:
-      extraArgs:
-        - --web.listen-address=0.0.0.0:9100
+      service:
+        listenOnAllInterfaces: true
       resources:
         requests: {cpu: 25m, memory: 32Mi}
         limits: {cpu: 100m, memory: 128Mi}

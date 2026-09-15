@@ -10,4 +10,4 @@ resources:
   - infrastructure-cert-manager-staging.yaml
   - infrastructure-observability.yaml
   - infrastructure-observability-config.yaml
-  - apps-demo.yaml
+  - apps-validation.yaml

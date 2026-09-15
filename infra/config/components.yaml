@@ -29,9 +29,6 @@ components:
   - name: homelab-control
     classification: MANDATORY
     state: DEPLOYED
-  - name: demo-mvp
-    classification: RECOMMENDED
-    state: IMPLEMENTED_IN_REPO
   - name: postgresql-catalog
     classification: OPTIONAL
     state: OPTIONAL_DISABLED

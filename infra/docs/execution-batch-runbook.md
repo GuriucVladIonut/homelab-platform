@@ -25,7 +25,7 @@ sudo ./infra/scripts/host/batch/32-validate-k3s.sh
 
 This makes k3s, CoreDNS, metrics-server, local-path storage, Helm, and k9s live. Traefik is explicitly disabled in k3s and is not live until Flux applies its HelmRelease.
 
-## Recovery and MVP batch
+## Recovery and validation workload batch
 
 After a reboot or host repair, run these commands from the repository root:
 
@@ -40,8 +40,7 @@ sudo ./infra/scripts/host/batch/21-platform-recovery-validation.sh
 
 The `33` script is the only script that restarts k3s. The `34` script creates
 only a mode-0600 operator kubeconfig. Flux then applies the node-exporter fix
-and disposable `demo/whoami` MVP. No public DNS or production ACME resource is
-created.
+and the disposable ingress/TLS validation workload. No public DNS or production ACME resource is created.
 
 ## Batch 3 — GitOps and control application
 
@@ -52,11 +51,11 @@ sudo ./infra/scripts/host/batch/50-install-homelab-control.sh
 
 Flux clients and the loopback-only host control service become available. Flux bootstrap itself remains manual until GitHub authentication is complete.
 
-## POC/MVP test gates
+## Platform test gates
 
-The host and Kubernetes POC is already testable: the operator has verified the k3s node, CoreDNS, metrics-server, local-path PVC provisioning, cluster DNS, lifecycle restart, and loopback control service. The next platform MVP gate is Flux bootstrap followed by reconciliation of private Traefik and lightweight observability. Test it with `flux get all -A`, `kubectl get pods -A`, private endpoint checks, Grafana health, and host-control actions while keeping the service loopback/private.
+The host and Kubernetes platform is testable: the operator has verified the k3s node, CoreDNS, metrics-server, local-path PVC provisioning, cluster DNS, lifecycle restart, and loopback control service. Validate it with `flux get all -A`, `kubectl get pods -A`, private endpoint checks, Grafana health, and host-control actions while keeping services private.
 
-The first household-data MVP should remain disabled until the platform MVP is stable. It consists of one catalog workflow plus one selected media application, with files under `/srv/homelab/data`, metadata-only PostgreSQL, a tested restore path, and no public exposure. Do not deploy Jellyfin, Immich, Samba shares, or the full application matrix simultaneously.
+Household-data applications remain disabled until platform health and backups are stable. Add catalog, media, and file-sharing components individually with no public exposure.
 
 ## Batch 4 — optional file-share foundation
 
@@ -68,7 +67,7 @@ ENABLE_SAMBA=1 sudo ./infra/scripts/host/batch/60-install-fileshare-foundation.s
 
 This installs packages only, leaves Samba services disabled, and creates no shares or credentials.
 
-## Batch 5 — Flux bootstrap and platform MVP
+## Batch 5 — Flux bootstrap and platform validation
 
 After authenticating the HTTPS GitHub remote securely, run from the repository root:
 

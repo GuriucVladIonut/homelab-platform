@@ -10,7 +10,7 @@ cannot access root-only host paths.
 
 ## Kubernetes and GitOps
 
-`30-install-k3s.sh` installs a pinned official k3s binary using its published checksum, systemd lifecycle, local-path storage, CoreDNS, metrics-server, ServiceLB, and explicit disablement for both bundled Traefik chart names. `31-install-kubernetes-tools.sh` installs pinned Helm/k9s artifacts with checksums; kubectl remains k3s-provided. `40-install-gitops-tools.sh` installs SOPS, age, and Flux clients without generating keys. k3s, Helm, k9s, SOPS, age, and Flux clients are DEPLOYED and validated by the operator. Flux bootstrap and GitHub SSH authentication are complete.
+`30-install-k3s.sh` installs a pinned official k3s binary using its published checksum, systemd lifecycle, local-path storage, CoreDNS, metrics-server, ServiceLB, and explicit disablement for both bundled Traefik chart names. `31-install-kubernetes-tools.sh` installs pinned Helm/k9s artifacts with checksums; `35-install-standalone-kubectl.sh` prepares a matching upstream kubectl with checksum verification and leaves k3s untouched. `40-install-gitops-tools.sh` installs SOPS, age, and Flux clients without generating keys. k3s, Helm, k9s, SOPS, age, and Flux clients are DEPLOYED and validated by the operator; standalone kubectl is READY_FOR_EXECUTION. Flux bootstrap and GitHub SSH authentication are complete.
 
 Traefik, cert-manager, and lightweight observability are deployed as pinned
 Flux-managed Helm resources. The staging Cloudflare issuer and wildcard
@@ -36,8 +36,8 @@ Version files are the update inputs; installers verify upstream checksums. Host 
 ## Current recovery pass
 
 The platform is `IMPLEMENTED_IN_REPO` for the remaining recovery work. A
-GitOps node-exporter bind/resource fix and a disposable private HTTPS demo MVP
-are prepared. Host-side Traefik ownership cleanup and the operator kubeconfig
+GitOps node-exporter bind/resource fix and a disposable private HTTPS validation
+workload are prepared. Host-side Traefik ownership cleanup and the operator kubeconfig
 copy are `READY_FOR_EXECUTION` through narrowly scoped scripts. Live validation
 is pending those manual root commands because Codex cannot access the host
 sudo/API credential boundary.

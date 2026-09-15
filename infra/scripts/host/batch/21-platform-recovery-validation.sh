@@ -33,11 +33,11 @@ kubectl -n cert-manager rollout status deployment/cert-manager --timeout=120s
 kubectl -n observability rollout status deployment/observability-grafana --timeout=120s
 kubectl -n observability rollout status deployment/observability-kube-prometh-operator --timeout=120s
 kubectl -n observability rollout status daemonset/observability-prometheus-node-exporter --timeout=120s
-kubectl -n demo rollout status deployment/whoami --timeout=120s
-step 'TLS and private MVP route'
+kubectl -n validation rollout status deployment/whoami --timeout=120s
+step 'TLS and private validation route'
 kubectl get clusterissuer letsencrypt-staging-cloudflare
 kubectl -n ingress get certificate homelab-wildcard-staging
-kubectl -n demo get ingressroute whoami
+kubectl -n validation get ingressroute whoami
 step 'Unexpected application ports'
 ss -lntup | grep -E ':(6443|10250|3000|9090|8090)\b' || true
 printf '%s\n' 'Platform recovery validation passed.'
