@@ -5,7 +5,9 @@ Status: `IMPLEMENTED_IN_REPO`, pending Flux reconciliation and live validation.
 The first application is a single-replica `traefik/whoami:v1.10.3` deployment
 in namespace `demo`. It is disposable: no database, PVC, NodePort, LoadBalancer,
 or public DNS record is used. The service is ClusterIP only and is routed by
-Flux-managed Traefik through the staging wildcard certificate.
+Flux-managed Traefik through a namespace-local staging wildcard certificate.
+The certificate is deliberately issued in `demo`; Traefik does not rely on
+cross-namespace Secret access.
 
 ## Security and resources
 

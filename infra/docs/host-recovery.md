@@ -31,6 +31,12 @@ permission change made by this workflow. The operator kubeconfig remains the
 correct credential boundary; an upstream kubectl client can be evaluated later
 if warning-free output is required.
 
+`35-install-standalone-kubectl.sh` installs the pinned upstream Kubernetes
+`v1.36.4` client after checksum verification. It replaces only the
+`/usr/local/bin/kubectl` symlink when that symlink resolves to k3s; the k3s
+binary and root-only configuration remain untouched. Helm, Flux, and k9s use
+the same private operator kubeconfig.
+
 ## Post-reboot validation
 
 `21-platform-recovery-validation.sh` is read-only and checks systemd, zram,

@@ -2,7 +2,8 @@
 set -Eeuo pipefail
 
 # Rollback: remove only ~/.kube/config-homelab. The root k3s kubeconfig is not
-# modified and no credentials are printed.
+# modified and no credentials are printed. Standalone kubectl replacement is
+# handled by 35-install-standalone-kubectl.sh.
 step() { printf '\n===== %s =====\n' "$1"; }
 fail() { printf 'ERROR: %s\n' "$1" >&2; exit 1; }
 [[ $EUID -eq 0 ]] || fail 'run as root'

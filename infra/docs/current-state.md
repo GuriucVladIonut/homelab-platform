@@ -39,7 +39,7 @@ Verified:
 | k3s binary | Installed and validated: `v1.36.4+k3s1`; node Ready |
 | Kubernetes paths | k3s state present under `/etc/rancher/k3s` and `/var/lib/rancher/k3s` |
 | Diagnostics installed | `iw`, `lm-sensors`, `smartmontools` packages present |
-| Kubernetes/GitOps tooling | k3s-provided kubectl, Helm `v4.2.3`, and k9s `v0.51.0` installed; Flux/SOPS/age not yet installed |
+| Kubernetes/GitOps tooling | k3s-provided kubectl was used initially; standalone upstream kubectl `v1.36.4` is prepared to remove wrapper warnings; Helm `v4.2.3`, k9s `v0.51.0`, Flux, SOPS, and age are installed |
 | VM tooling | `virsh`, `qemu-system-x86_64` not found |
 | Quality/security tooling | `shellcheck`, `shfmt`, `yamllint`, `kubeconform`, `trivy`, `gitleaks` not found |
 | Host packages observed | NetworkManager, OpenSSH server, UFW, smartmontools, lm-sensors, iw |
