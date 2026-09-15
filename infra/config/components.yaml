@@ -10,25 +10,28 @@ components:
     state: READY_FOR_EXECUTION
   - name: cert-manager
     classification: MANDATORY
-    state: BLOCKED_EXTERNAL
+    state: DEPLOYED
   - name: prometheus
     classification: RECOMMENDED
-    state: READY_FOR_EXECUTION
+    state: DEPLOYED
   - name: grafana
     classification: RECOMMENDED
-    state: READY_FOR_EXECUTION
+    state: DEPLOYED
   - name: kube-state-metrics
     classification: RECOMMENDED
-    state: READY_FOR_EXECUTION
+    state: DEPLOYED
   - name: node-exporter
     classification: RECOMMENDED
-    state: READY_FOR_EXECUTION
+    state: IMPLEMENTED_IN_REPO
   - name: restic
     classification: RECOMMENDED
     state: READY_FOR_EXECUTION
   - name: homelab-control
     classification: MANDATORY
-    state: READY_FOR_EXECUTION
+    state: DEPLOYED
+  - name: demo-mvp
+    classification: RECOMMENDED
+    state: IMPLEMENTED_IN_REPO
   - name: postgresql-catalog
     classification: OPTIONAL
     state: OPTIONAL_DISABLED

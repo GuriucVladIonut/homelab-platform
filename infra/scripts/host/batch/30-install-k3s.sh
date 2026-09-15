@@ -30,6 +30,7 @@ install -m 0640 -o root -g root /dev/stdin /etc/rancher/k3s/config.yaml <<CONFIG
 write-kubeconfig-mode: "0640"
 disable:
   - traefik
+  - traefik-crd
 cluster-cidr: ${K3S_CLUSTER_CIDR}
 service-cidr: ${K3S_SERVICE_CIDR}
 cluster-dns: ${K3S_CLUSTER_DNS}

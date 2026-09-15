@@ -25,6 +25,24 @@ sudo ./infra/scripts/host/batch/32-validate-k3s.sh
 
 This makes k3s, CoreDNS, metrics-server, local-path storage, Helm, and k9s live. Traefik is explicitly disabled in k3s and is not live until Flux applies its HelmRelease.
 
+## Recovery and MVP batch
+
+After a reboot or host repair, run these commands from the repository root:
+
+```bash
+sudo ./infra/scripts/host/batch/33-repair-k3s-traefik-ownership.sh
+sudo ./infra/scripts/host/batch/34-install-operator-kubeconfig.sh
+export KUBECONFIG="$HOME/.kube/config-homelab"
+flux reconcile source git flux-system
+flux reconcile kustomization flux-system --with-source
+sudo ./infra/scripts/host/batch/21-platform-recovery-validation.sh
+```
+
+The `33` script is the only script that restarts k3s. The `34` script creates
+only a mode-0600 operator kubeconfig. Flux then applies the node-exporter fix
+and disposable `demo/whoami` MVP. No public DNS or production ACME resource is
+created.
+
 ## Batch 3 — GitOps and control application
 
 ```bash

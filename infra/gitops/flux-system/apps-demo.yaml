@@ -1,0 +1,21 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: apps-demo
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  dependsOn:
+    - name: infrastructure-traefik-config
+    - name: infrastructure-cert-manager-staging
+  path: ./infra/apps/demo
+  prune: true
+  wait: true
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: whoami
+      namespace: demo
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

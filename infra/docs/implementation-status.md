@@ -2,13 +2,21 @@
 
 ## Host
 
-The host scripts in `infra/scripts/host/` are READY_FOR_EXECUTION and are intentionally separate from repository changes. Verified host changes already deployed are zram, k3s kernel prerequisites, directory layout, NetworkManager priorities, and SSH hardening. Firewall activation and the reboot persistence gate remain pending. The fixed Ubuntu 22.04.5 baseline is retained.
+The host foundation is DEPLOYED and was verified by the operator: zram, k3s
+kernel prerequisites, directory layout, NetworkManager priorities, SSH
+hardening, firewall, and reboot persistence. The fixed Ubuntu 22.04.5 baseline
+is retained. The new recovery scripts are READY_FOR_EXECUTION because Codex
+cannot access root-only host paths.
 
 ## Kubernetes and GitOps
 
-`30-install-k3s.sh` installs a pinned official k3s binary using its published checksum, systemd lifecycle, local-path storage, CoreDNS, metrics-server, ServiceLB, and explicit Traefik disablement. `31-install-kubernetes-tools.sh` installs pinned Helm/k9s artifacts with checksums; kubectl remains k3s-provided. `40-install-gitops-tools.sh` installs SOPS, age, and Flux clients without generating keys. k3s, Helm, k9s, SOPS, age, and Flux clients are now DEPLOYED and validated by the operator. The node, addon rollouts, PVC, cluster DNS, and k3s lifecycle validation passed. Flux bootstrap remains BLOCKED_EXTERNAL pending GitHub authentication.
+`30-install-k3s.sh` installs a pinned official k3s binary using its published checksum, systemd lifecycle, local-path storage, CoreDNS, metrics-server, ServiceLB, and explicit disablement for both bundled Traefik chart names. `31-install-kubernetes-tools.sh` installs pinned Helm/k9s artifacts with checksums; kubectl remains k3s-provided. `40-install-gitops-tools.sh` installs SOPS, age, and Flux clients without generating keys. k3s, Helm, k9s, SOPS, age, and Flux clients are DEPLOYED and validated by the operator. Flux bootstrap and GitHub SSH authentication are complete.
 
-Traefik, cert-manager, and lightweight observability are represented as pinned Flux-compatible Helm resources. The cert-manager issuer is intentionally gated until CF-001 and an encrypted token exist. Grafana, Prometheus, kube-state-metrics, and node-exporter use conservative resources and seven-day retention. Loki/Alloy and OpenSearch are not enabled.
+Traefik, cert-manager, and lightweight observability are deployed as pinned
+Flux-managed Helm resources. The staging Cloudflare issuer and wildcard
+certificate are VALIDATED; production ACME and public DNS remain disabled.
+Grafana, Prometheus, kube-state-metrics, and node-exporter use conservative
+resources and seven-day retention. Loki/Alloy and OpenSearch are not enabled.
 
 ## Applications and storage
 
@@ -16,8 +24,20 @@ Traefik, cert-manager, and lightweight observability are represented as pinned F
 
 ## DNS and secrets
 
-`infra/config/endpoints.yaml` is the canonical private endpoint registry. No public RFC1918 records are created. `.sops.yaml` and workflow documentation are prepared, but the recipient and Cloudflare secret remain external/manual. Existing Cloudflare resources are untouched.
+`infra/config/endpoints.yaml` is the canonical private endpoint registry. No
+public RFC1918 records are created. `.sops.yaml` and the Cloudflare token are
+SOPS/age encrypted; the age private key remains out-of-band. Existing
+Cloudflare resources are untouched.
 
 ## Update, rollback, and backup
 
 Version files are the update inputs; installers verify upstream checksums. Host scripts document rollback. Same-disk restic design is operational rollback only, not disaster recovery. No personal media is copied or moved by this pass.
+
+## Current recovery pass
+
+The platform is `IMPLEMENTED_IN_REPO` for the remaining recovery work. A
+GitOps node-exporter bind/resource fix and a disposable private HTTPS demo MVP
+are prepared. Host-side Traefik ownership cleanup and the operator kubeconfig
+copy are `READY_FOR_EXECUTION` through narrowly scoped scripts. Live validation
+is pending those manual root commands because Codex cannot access the host
+sudo/API credential boundary.
