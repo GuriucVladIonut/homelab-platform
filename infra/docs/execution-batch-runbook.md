@@ -47,9 +47,15 @@ and the disposable ingress/TLS validation workload. No public DNS or production 
 ```bash
 sudo ./infra/scripts/host/batch/40-install-gitops-tools.sh
 sudo ./infra/scripts/host/batch/50-install-homelab-control.sh
+export KUBECONFIG="$HOME/.kube/config-homelab"
+flux reconcile kustomization infrastructure-base --with-source
+sudo ./infra/scripts/host/batch/51-install-homelab-control-reader.sh
 ```
 
-Flux clients and the loopback-only host control service become available. Flux bootstrap itself remains manual until GitHub authentication is complete.
+Flux clients and the loopback-only host control service become available. The
+reader script installs only the host UI's generated read-only kubeconfig; it
+does not weaken `/etc/rancher/k3s` permissions. Flux bootstrap itself remains
+manual until GitHub authentication is complete.
 
 ## Platform test gates
 

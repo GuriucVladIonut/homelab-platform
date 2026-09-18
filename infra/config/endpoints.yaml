@@ -3,10 +3,37 @@ endpoints:
     category: control
     namespace: homelab-system
     exposure: private
-    private_url: https://control.homelab.gvlad.dev
+    private_url: http://127.0.0.1:8090
     public_url: null
     health_path: /healthz
     documentation: docs/components/homelab-control.md
+    enabled: true
+  - name: prometheus.homelab.gvlad.dev
+    category: observability
+    namespace: observability
+    exposure: private
+    private_url: https://prometheus.homelab.gvlad.dev
+    public_url: null
+    health_path: /-/ready
+    documentation: docs/components/observability.md
+    enabled: false
+  - name: traefik.homelab.gvlad.dev
+    category: ingress
+    namespace: ingress
+    exposure: private
+    private_url: https://traefik.homelab.gvlad.dev
+    public_url: null
+    health_path: /ping
+    documentation: docs/infrastructure/ingress/README.md
+    enabled: false
+  - name: validation.homelab.gvlad.dev
+    category: validation
+    namespace: validation
+    exposure: private
+    private_url: https://validation.homelab.gvlad.dev
+    public_url: null
+    health_path: /
+    documentation: docs/components/validation-workload.md
     enabled: false
   - name: grafana.homelab.gvlad.dev
     category: observability

@@ -10,7 +10,7 @@ for command_name in systemctl kubectl flux swapon ufw ss; do
 done
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 step 'Host services and swap'
-systemctl --failed --no-legend
+if systemctl --failed --no-legend | grep -q .; then fail 'failed systemd units are present'; fi
 systemctl is-enabled --quiet k3s || fail 'k3s is not enabled'
 systemctl is-active --quiet k3s || fail 'k3s is not active'
 swapon --show
@@ -28,16 +28,27 @@ kubectl get nodes
 kubectl get nodes --no-headers | awk '$2 != "Ready" {bad=1} END {exit bad}' || fail 'node is not Ready'
 flux get all -A
 step 'Required workloads'
+kubectl -n kube-system rollout status deployment/coredns --timeout=120s
+kubectl -n kube-system rollout status deployment/local-path-provisioner --timeout=120s
+kubectl -n kube-system rollout status deployment/metrics-server --timeout=120s
 kubectl -n ingress rollout status deployment/traefik --timeout=120s
 kubectl -n cert-manager rollout status deployment/cert-manager --timeout=120s
+kubectl -n cert-manager rollout status deployment/cert-manager-cainjector --timeout=120s
+kubectl -n cert-manager rollout status deployment/cert-manager-webhook --timeout=120s
+kubectl -n flux-system rollout status deployment/helm-controller --timeout=120s
+kubectl -n flux-system rollout status deployment/kustomize-controller --timeout=120s
+kubectl -n flux-system rollout status deployment/notification-controller --timeout=120s
+kubectl -n flux-system rollout status deployment/source-controller --timeout=120s
 kubectl -n observability rollout status deployment/observability-grafana --timeout=120s
 kubectl -n observability rollout status deployment/observability-kube-prometh-operator --timeout=120s
+kubectl -n observability rollout status deployment/observability-kube-state-metrics --timeout=120s
 kubectl -n observability rollout status daemonset/observability-prometheus-node-exporter --timeout=120s
-kubectl -n validation rollout status deployment/whoami --timeout=120s
-step 'TLS and private validation route'
+kubectl -n observability rollout status statefulset/prometheus-observability-kube-prometh-prometheus --timeout=120s
+kubectl -n kube-system get pods -l svccontroller.k3s.cattle.io/svcname=traefik --no-headers | grep -q '2/2' || fail 'ServiceLB Traefik pod is not 2/2 Ready'
+step 'TLS and platform state'
 kubectl get clusterissuer letsencrypt-staging-cloudflare
 kubectl -n ingress get certificate homelab-wildcard-staging
-kubectl -n validation get ingressroute whoami
+kubectl -n ingress get tlsstore default
 step 'Unexpected application ports'
 ss -lntup | grep -E ':(6443|10250|3000|9090|8090)\b' || true
 printf '%s\n' 'Platform recovery validation passed.'

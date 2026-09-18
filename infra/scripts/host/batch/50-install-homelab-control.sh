@@ -45,7 +45,7 @@ After=network-online.target
 [Service]
 User=homelab-control
 Group=homelab-control
-ExecStart=/opt/homelab/control/homelab-control -listen 127.0.0.1:8090 -endpoints /opt/homelab/control/endpoints.yaml
+ExecStart=/opt/homelab/control/homelab-control -listen 127.0.0.1:8090 -endpoints /opt/homelab/control/endpoints.yaml -kubeconfig /opt/homelab/control/kubeconfig-reader
 Restart=on-failure
 NoNewPrivileges=yes
 PrivateTmp=yes

@@ -16,11 +16,13 @@ Traefik, cert-manager, and lightweight observability are deployed as pinned
 Flux-managed Helm resources. The staging Cloudflare issuer and wildcard
 certificate are VALIDATED; production ACME and public DNS remain disabled.
 Grafana, Prometheus, kube-state-metrics, and node-exporter use conservative
-resources and seven-day retention. Loki/Alloy and OpenSearch are not enabled.
+resources and seven-day retention. Phase G adds bounded platform alert rules,
+private Grafana and Prometheus routes, and no external notification channel.
+Loki/Alloy and OpenSearch are not enabled.
 
 ## Applications and storage
 
-`apps/homelab-control` is DEPLOYED outside Kubernetes as a standard-library Go loopback service under the non-root `homelab-control` account. It has CSRF, POST-only state changes, confirmation for stop/restart, HTML escaping, security headers, and a fixed sudo helper boundary; the operator verified it active on `127.0.0.1:8090`. `apps/catalog` is OPTIONAL_DISABLED source and schema for PostgreSQL metadata/audit only; media remains on host storage and physical deletion is not implemented in the baseline. Samba is an optional disabled package foundation with no accounts, passwords, or shares.
+`apps/homelab-control` is DEPLOYED outside Kubernetes as a standard-library Go loopback service under the non-root `homelab-control` account. Phase F dashboard code now exposes host telemetry, k3s controls, bounded Kubernetes summaries, private endpoint state, Prometheus target/alert summaries, storage, and an explicit backup-not-configured state. It has CSRF, POST-only state changes, confirmation for stop/restart, HTML escaping, security headers, and a fixed sudo helper boundary. Kubernetes reads use Git-managed get/list/watch-only RBAC and a root-owned mode-0640 reader kubeconfig. `apps/catalog` is OPTIONAL_DISABLED source and schema for PostgreSQL metadata/audit only; media remains on host storage and physical deletion is not implemented in the baseline. Samba is an optional disabled package foundation with no accounts, passwords, or shares.
 
 ## DNS and secrets
 
@@ -33,11 +35,11 @@ Cloudflare resources are untouched.
 
 Version files are the update inputs; installers verify upstream checksums. Host scripts document rollback. Same-disk restic design is operational rollback only, not disaster recovery. No personal media is copied or moved by this pass.
 
-## Current recovery pass
+## Phase F/G completion pass
 
-The platform is `IMPLEMENTED_IN_REPO` for the remaining recovery work. A
-GitOps node-exporter bind/resource fix and a disposable private HTTPS validation
-workload are prepared. Host-side Traefik ownership cleanup and the operator kubeconfig
-copy are `READY_FOR_EXECUTION` through narrowly scoped scripts. Live validation
-is pending those manual root commands because Codex cannot access the host
-sudo/API credential boundary.
+The platform is `IMPLEMENTED_IN_REPO` for the host-control dashboard,
+read-only Kubernetes adapter, private observability routes, alert baseline, and
+stricter recovery validator. The reader kubeconfig installation is
+`READY_FOR_EXECUTION` through `51-install-homelab-control-reader.sh`. Live UI,
+Prometheus API, Flux, and alert validation requires the operator host because
+Codex cannot access the host sudo/API credential boundary.

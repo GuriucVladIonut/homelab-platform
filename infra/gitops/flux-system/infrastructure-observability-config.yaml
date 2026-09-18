@@ -7,6 +7,7 @@ spec:
   interval: 10m0s
   dependsOn:
     - name: infrastructure-observability
+    - name: infrastructure-traefik-config
   path: ./infra/infrastructure/observability/config
   prune: true
   wait: true
