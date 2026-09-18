@@ -109,7 +109,7 @@ func (a *app) index(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	rows, err := a.db.QueryContext(r.Context(), `SELECT title,media_type,relative_path,size_bytes,status FROM media_item ORDER BY discovered_at DESC LIMIT 100`)
+	rows, err := a.db.QueryContext(r.Context(), `SELECT mi.title,mi.media_type,COALESCE(fa.relative_path,''),COALESCE(fa.size_bytes,0),mi.status FROM media_item mi LEFT JOIN file_asset fa ON fa.media_item_id=mi.id ORDER BY mi.discovered_at DESC LIMIT 100`)
 	if err != nil {
 		http.Error(w, "query failed", 500)
 		return
@@ -140,7 +140,7 @@ func (a *app) items(w http.ResponseWriter, r *http.Request) {
 	}
 	q := r.URL.Query().Get("q")
 	typ := r.URL.Query().Get("media_type")
-	rows, err := a.db.QueryContext(r.Context(), `SELECT id,media_type,title,relative_path,filename,extension,mime_type,size_bytes,sha256,status,COALESCE(description,''),created_at,modified_at,discovered_at FROM media_item WHERE ($1='' OR title ILIKE '%'||$1||'%' OR filename ILIKE '%'||$1||'%') AND ($2='' OR media_type=$2) ORDER BY discovered_at DESC LIMIT $3`, q, typ, limit)
+	rows, err := a.db.QueryContext(r.Context(), `SELECT mi.id,mi.media_type,mi.title,COALESCE(fa.relative_path,''),COALESCE(fa.filename,''),COALESCE(fa.extension,''),COALESCE(fa.mime_type,''),COALESCE(fa.size_bytes,0),COALESCE(fa.sha256,''),mi.status,COALESCE(mi.description,''),mi.created_at,COALESCE(fa.created_at,mi.created_at),mi.discovered_at FROM media_item mi LEFT JOIN file_asset fa ON fa.media_item_id=mi.id WHERE ($1='' OR mi.title ILIKE '%'||$1||'%' OR fa.filename ILIKE '%'||$1||'%') AND ($2='' OR mi.media_type=$2) ORDER BY mi.discovered_at DESC LIMIT $3`, q, typ, limit)
 	if err != nil {
 		http.Error(w, "query failed", 500)
 		return
@@ -161,7 +161,7 @@ func (a *app) stats(w http.ResponseWriter, r *http.Request) {
 	var s stats
 	s.ByType = map[string]int{}
 	_ = a.db.QueryRowContext(r.Context(), `SELECT count(*) FROM media_item`).Scan(&s.Total)
-	_ = a.db.QueryRowContext(r.Context(), `SELECT count(*) FROM media_item WHERE relative_path LIKE 'incoming/%'`).Scan(&s.Incoming)
+	_ = a.db.QueryRowContext(r.Context(), `SELECT count(*) FROM file_asset WHERE relative_path LIKE 'incoming/%'`).Scan(&s.Incoming)
 	_ = a.db.QueryRowContext(r.Context(), `SELECT count(*) FROM ingest_event WHERE status='failed' AND created_at > now()-interval '24 hours'`).Scan(&s.Failed)
 	_ = a.db.QueryRowContext(r.Context(), `SELECT count(*) FROM file_asset WHERE duplicate_of IS NOT NULL`).Scan(&s.Duplicates)
 	rows, err := a.db.QueryContext(r.Context(), `SELECT media_type,count(*) FROM media_item GROUP BY media_type`)
