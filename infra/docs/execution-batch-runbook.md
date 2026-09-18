@@ -103,8 +103,12 @@ into k3s containerd without publishing it:
 
 ```bash
 sudo ./infra/scripts/host/batch/75-build-catalog-image.sh "$PWD"
-docker save homelab-catalog:0.1.0 | sudo k3s ctr images import -
 ```
+
+Batch 75 builds the fully qualified local tag
+`docker.io/library/homelab-catalog:0.1.0` and imports it into the k3s
+containerd `k8s.io` namespace. Do not run an unprivileged `podman save`; batch
+75 uses root's image store consistently.
 
 Only after the backup baseline is green, add the encrypted Secret to the
 PostgreSQL and catalog Kustomizations, copy

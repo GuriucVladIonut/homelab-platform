@@ -4,17 +4,25 @@ set -Eeuo pipefail
 fail() { printf 'ERROR: %s\n' "$1" >&2; exit 1; }
 [[ $EUID -eq 0 ]] || fail 'run with sudo'
 repo_root=${1:-$(pwd)}
+image=docker.io/library/homelab-catalog:0.1.0
+builder=
 if command -v docker >/dev/null; then
-  docker build --tag homelab-catalog:0.1.0 "$repo_root/apps/catalog"
+  builder=docker
+  docker build --tag "$image" "$repo_root/apps/catalog"
 elif command -v podman >/dev/null; then
-  podman build --tag homelab-catalog:0.1.0 "$repo_root/apps/catalog"
+  builder=podman
+  podman build --tag "$image" "$repo_root/apps/catalog"
 elif command -v buildah >/dev/null; then
-  buildah bud --tag homelab-catalog:0.1.0 "$repo_root/apps/catalog"
+  builder=buildah
+  buildah bud --tag "$image" "$repo_root/apps/catalog"
 else
   fail 'install one image builder first: sudo apt-get install --yes podman'
 fi
-if command -v podman >/dev/null && podman image exists localhost/homelab-catalog:0.1.0; then
-  podman tag localhost/homelab-catalog:0.1.0 homelab-catalog:0.1.0
+printf '%s\n' "Catalog image built: $image"
+printf '%s\n' 'Loading into containerd namespace k8s.io...'
+if [[ $builder == docker ]]; then
+  docker save "$image" | k3s ctr -n k8s.io images import -
+else
+  podman save "$image" | k3s ctr -n k8s.io images import -
 fi
-printf '%s\n' 'Catalog image built. Load it into k3s containerd before enabling the Flux catalog Kustomization:'
-printf '%s\n' 'sudo podman save homelab-catalog:0.1.0 | sudo k3s ctr images import -'
+printf '%s\n' 'Catalog image imported into containerd namespace k8s.io.'

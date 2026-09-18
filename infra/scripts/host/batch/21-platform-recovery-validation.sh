@@ -5,7 +5,7 @@ set -Eeuo pipefail
 step() { printf '\n===== %s =====\n' "$1"; }
 fail() { printf 'ERROR: %s\n' "$1" >&2; exit 1; }
 [[ $EUID -eq 0 ]] || fail 'run as root'
-for command_name in systemctl kubectl flux swapon ufw ss restic date stat; do
+for command_name in systemctl kubectl flux swapon ufw ss restic date stat curl; do
   command -v "$command_name" >/dev/null || fail "missing prerequisite: $command_name"
 done
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
@@ -49,6 +49,18 @@ step 'TLS and platform state'
 kubectl get clusterissuer letsencrypt-staging-cloudflare
 kubectl -n ingress get certificate homelab-wildcard-staging
 kubectl -n ingress get tlsstore default
+route_https() {
+  local namespace=$1 name=$2 host=$3 status
+  if kubectl -n "$namespace" get ingressroute "$name" >/dev/null 2>&1; then
+    status=$(curl --silent --show-error --insecure --max-time 10 --resolve "$host:443:127.0.0.1" -o /dev/null -w '%{http_code}' "https://$host/") || fail "HTTPS route probe failed: $host"
+    [[ $status =~ ^[23][0-9][0-9]$ ]] || fail "HTTPS route returned $status: $host"
+  fi
+}
+step 'Enabled HTTPS routes'
+route_https catalog catalog catalog.homelab.gvlad.dev
+route_https observability grafana grafana.homelab.gvlad.dev
+route_https observability prometheus prometheus.homelab.gvlad.dev
+route_https validation whoami validation.homelab.gvlad.dev
 step 'Backup and storage baseline'
 systemctl is-enabled --quiet homelab-backup.timer || fail 'backup timer is not enabled'
 systemctl is-active --quiet homelab-backup.timer || fail 'backup timer is not active'

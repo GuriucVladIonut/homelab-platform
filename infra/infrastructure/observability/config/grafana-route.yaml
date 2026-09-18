@@ -10,7 +10,6 @@ spec:
       kind: Rule
       middlewares:
         - name: security-headers
-          namespace: ingress
       services:
         - name: observability-grafana
           port: 80
