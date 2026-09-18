@@ -41,9 +41,9 @@ stringData:
   database-url: postgres://catalog:$password@postgresql.database.svc.cluster.local:5432/homelab?sslmode=disable
 EOF
 encrypted_tmp=$(mktemp); catalog_tmp=$(mktemp); trap 'rm -f "$tmp" "$encrypted_tmp" "$catalog_tmp"' EXIT
-SOPS_AGE_KEY_FILE="$key_file" sops --encrypt "$tmp" >"$encrypted_tmp"
+SOPS_AGE_KEY_FILE="$key_file" sops --encrypt --filename-override "$secret_file" "$tmp" >"$encrypted_tmp"
 sed 's/namespace: database/namespace: catalog/' "$tmp" >"$tmp.catalog"
-SOPS_AGE_KEY_FILE="$key_file" sops --encrypt "$tmp.catalog" >"$catalog_tmp"
+SOPS_AGE_KEY_FILE="$key_file" sops --encrypt --filename-override "$catalog_secret_file" "$tmp.catalog" >"$catalog_tmp"
 install -m 0600 "$encrypted_tmp" "$secret_file"
 install -m 0600 "$catalog_tmp" "$catalog_secret_file"
 rm -f "$tmp.catalog"

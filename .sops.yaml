@@ -1,3 +1,5 @@
 creation_rules:
   - path_regex: 'infra/(secrets/.*|infrastructure/cert-manager/staging/.*)\.sops\.(yaml|json)$'
     age: 'age19mlxln35z0ed8mqst5llxhjggwdgkjl523zh3sx3flcynl5wepts7kc30l'
+  - path_regex: 'infra/infrastructure/(postgresql|catalog)/.*\.sops\.yaml$'
+    age: 'age19mlxln35z0ed8mqst5llxhjggwdgkjl523zh3sx3flcynl5wepts7kc30l'
