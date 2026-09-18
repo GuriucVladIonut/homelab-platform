@@ -9,6 +9,8 @@ command -v sops >/dev/null || fail 'sops is required'
 command -v openssl >/dev/null || fail 'openssl is required'
 operator_home=$(getent passwd "${SUDO_USER:-}" | cut -d: -f6 || true)
 operator_home=${operator_home:-$HOME}
+operator_uid=${SUDO_UID:-$(id -u)}
+operator_gid=${SUDO_GID:-$(id -g)}
 key_file=${SOPS_AGE_KEY_FILE:-$operator_home/.config/sops/age/keys.txt}
 [[ -r $key_file ]] || fail "age key is not readable: $key_file"
 secret_dir="$repo_root/infra/infrastructure/postgresql"
@@ -46,6 +48,7 @@ sed 's/namespace: database/namespace: catalog/' "$tmp" >"$tmp.catalog"
 SOPS_AGE_KEY_FILE="$key_file" sops --encrypt --filename-override "$catalog_secret_file" "$tmp.catalog" >"$catalog_tmp"
 install -m 0600 "$encrypted_tmp" "$secret_file"
 install -m 0600 "$catalog_tmp" "$catalog_secret_file"
+chown "$operator_uid:$operator_gid" "$secret_file" "$catalog_secret_file"
 rm -f "$tmp.catalog"
 printf '%s\n' 'Created encrypted PostgreSQL and catalog credentials; plaintext was not displayed.'
 printf '%s\n' 'Next: add each encrypted file to its local Kustomization, copy phase-j.yaml.example to phase-j.yaml, add it to infra/gitops/kustomization.yaml, and commit.'
