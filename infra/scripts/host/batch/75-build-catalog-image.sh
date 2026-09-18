@@ -26,3 +26,7 @@ else
   podman save "$image" | k3s ctr -n k8s.io images import -
 fi
 printf '%s\n' 'Catalog image imported into containerd namespace k8s.io.'
+if [[ -r /etc/rancher/k3s/k3s.yaml ]] && command -v kubectl >/dev/null && KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n catalog get deployment catalog >/dev/null 2>&1; then
+  KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n catalog rollout restart deployment/catalog
+  KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n catalog rollout status deployment/catalog --timeout=120s
+fi
