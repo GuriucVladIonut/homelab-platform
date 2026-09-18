@@ -4,7 +4,14 @@ set -Eeuo pipefail
 fail() { printf 'ERROR: %s\n' "$1" >&2; exit 1; }
 [[ $EUID -eq 0 ]] || fail 'run with sudo'
 repo_root=${1:-$(pwd)}
-command -v docker >/dev/null || fail 'docker/buildah/nerdctl is required to build the catalog image'
-docker build --tag homelab-catalog:0.1.0 "$repo_root/apps/catalog"
+if command -v docker >/dev/null; then
+  docker build --tag homelab-catalog:0.1.0 "$repo_root/apps/catalog"
+elif command -v podman >/dev/null; then
+  podman build --tag homelab-catalog:0.1.0 "$repo_root/apps/catalog"
+elif command -v buildah >/dev/null; then
+  buildah bud --tag homelab-catalog:0.1.0 "$repo_root/apps/catalog"
+else
+  fail 'install one image builder first: sudo apt-get install --yes podman'
+fi
 printf '%s\n' 'Catalog image built. Load it into k3s containerd before enabling the Flux catalog Kustomization:'
-printf '%s\n' 'docker save homelab-catalog:0.1.0 | k3s ctr images import -'
+printf '%s\n' 'podman save homelab-catalog:0.1.0 | sudo k3s ctr images import -'
