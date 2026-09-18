@@ -65,12 +65,11 @@ Household-data applications remain disabled until platform health and backups ar
 
 ## Phase H — same-disk operational backup baseline
 
-Create the restic password manually, then install and validate the baseline:
+Initialize the local Restic secret with the repository-safe helper, then install
+and validate the baseline:
 
 ```bash
-sudo install -d -m 0700 /etc/homelab
-sudo bash -c 'umask 077; read -r -s -p "Restic password: " p; printf "\\n" >&2; printf "%s" "$p" > /etc/homelab/restic-password'
-sudo bash -c 'printf "%s\\n" "RESTIC_REPOSITORY=/srv/homelab/backups/restic" "RESTIC_PASSWORD_FILE=/etc/homelab/restic-password" > /etc/homelab/restic.env; chmod 0600 /etc/homelab/restic.env /etc/homelab/restic-password'
+sudo ./infra/scripts/host/batch/73-initialize-restic-secret.sh
 sudo ./infra/scripts/host/batch/70-install-backup-baseline.sh
 sudo systemctl start homelab-backup.service
 sudo ./infra/scripts/host/batch/71-validate-backups.sh
