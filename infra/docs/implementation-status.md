@@ -43,3 +43,13 @@ stricter recovery validator. The reader kubeconfig installation is
 `READY_FOR_EXECUTION` through `51-install-homelab-control-reader.sh`. Live UI,
 Prometheus API, Flux, and alert validation requires the operator host because
 Codex cannot access the host sudo/API credential boundary.
+
+## Phase H/I preparation
+
+The restic baseline is `READY_FOR_EXECUTION`; it is same-disk operational
+rollback and **NOT DISASTER RECOVERY**. It excludes media and transient runtime
+data, uses seven daily/four weekly/three monthly retention, and provides a
+temporary restore validator. The password remains outside Git in a root-only
+file. The canonical `/srv/homelab/data` tree is prepared by a separate script;
+Samba remains `OPTIONAL_DISABLED`. PostgreSQL/catalog remains disabled until
+backup installation and temporary restore validation are complete.

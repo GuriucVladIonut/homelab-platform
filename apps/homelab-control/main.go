@@ -26,13 +26,13 @@ import (
 const defaultKubeconfig = "/opt/homelab/control/kubeconfig-reader"
 
 type app struct {
-	csrf, endpoints, kubeconfig, promService string
-	started                                  time.Time
-	mu                                       sync.RWMutex
-	lastAction                               string
-	cache                                    dashboard
-	cacheAt                                  time.Time
-	cacheValid                               bool
+	csrf, endpoints, kubeconfig, promService, helper string
+	started                                          time.Time
+	mu                                               sync.RWMutex
+	lastAction                                       string
+	cache                                            dashboard
+	cacheAt                                          time.Time
+	cacheValid                                       bool
 }
 type endpoint struct {
 	Name, Category, Namespace, Exposure, PrivateURL, PublicURL, HealthPath, Documentation, State string
@@ -57,13 +57,16 @@ type observabilityStatus struct {
 	State, Prometheus, Grafana, Targets, DownTargets, NodeExporter, KubeStateMetrics, Firing, Pending, CPU, Memory, Root, Homelab, NodeReady string
 	Alerts                                                                                                                                   []alert
 }
+type backupStatus struct {
+	State, LastBackup, LastVerification, Snapshot, Repository, LastError, NextRun string
+}
 type dashboard struct {
 	CSRF, LastAction      string
 	Host                  hostStatus
 	Cluster               kubeStatus
 	Observability         observabilityStatus
 	Endpoints             []endpoint
-	Backups               string
+	Backups               backupStatus
 	K3sActive, K3sEnabled bool
 }
 
@@ -76,7 +79,7 @@ var page = template.Must(template.New("page").Funcs(template.FuncMap{"statusClas
 <section><h2>KUBERNETES <span class="badge {{statusClass .Cluster.State}}">{{.Cluster.State}}</span></h2>{{if .Cluster.Available}}<p>Node {{.Cluster.Node}} · Kubernetes {{.Cluster.Version}}</p><div class="grid"><div class="card">Namespaces: {{.Cluster.Namespaces}}<br>Pods: {{.Cluster.Pods}}<br>Running: {{.Cluster.Running}}<br>Pending: {{.Cluster.Pending}}<br>Failed: {{.Cluster.Failed}}<br>Non-Ready: {{.Cluster.NonReady}}</div><div class="card">Deployments: {{.Cluster.Deployments.Ready}}/{{.Cluster.Deployments.Total}}<br>DaemonSets: {{.Cluster.DaemonSets.Ready}}/{{.Cluster.DaemonSets.Total}}<br>StatefulSets: {{.Cluster.StatefulSets.Ready}}/{{.Cluster.StatefulSets.Total}}<br>PVCs: {{.Cluster.PVCs.Total}}</div><div class="card">Flux Kustomizations: {{.Cluster.Flux.Ready}}/{{.Cluster.Flux.Total}}<br>HelmReleases: {{.Cluster.Helm.Ready}}/{{.Cluster.Helm.Total}}</div></div>{{if .Cluster.Unhealthy}}<h3>Unhealthy resources</h3><table><tr><th>Kind</th><th>Namespace</th><th>Name</th><th>Status</th></tr>{{range .Cluster.Unhealthy}}<tr><td>{{.Kind}}</td><td>{{.Namespace}}</td><td>{{.Name}}</td><td>{{.Status}}</td></tr>{{end}}</table>{{end}}{{else}}<p><strong>CLUSTER OFFLINE</strong>{{if .Cluster.Error}} — {{.Cluster.Error}}{{end}}</p>{{end}}</section>
 <section><h2>ENDPOINTS</h2><table><tr><th>Name</th><th>Component</th><th>Scope</th><th>URL</th><th>State</th></tr>{{range .Endpoints}}<tr><td>{{.Name}}</td><td>{{.Category}}</td><td>{{.Exposure}}</td><td>{{if .Enabled}}<a href="{{.PrivateURL}}">{{.PrivateURL}}</a>{{else}}{{.PrivateURL}}{{end}}</td><td class="{{statusClass .State}}">{{.State}}</td></tr>{{end}}</table></section>
 <section><h2>OBSERVABILITY <span class="badge {{statusClass .Observability.State}}">{{.Observability.State}}</span></h2><div class="grid"><div class="card">Prometheus: {{.Observability.Prometheus}}<br>Targets: {{.Observability.Targets}}<br>Down: {{.Observability.DownTargets}}<br>node-exporter: {{.Observability.NodeExporter}}<br>kube-state-metrics: {{.Observability.KubeStateMetrics}}</div><div class="card">Grafana: {{.Observability.Grafana}}<br>Firing alerts: {{.Observability.Firing}}<br>Pending alerts: {{.Observability.Pending}}</div><div class="card">CPU/load: {{.Observability.CPU}}<br>Memory: {{.Observability.Memory}}<br>Root: {{.Observability.Root}}<br>/srv: {{.Observability.Homelab}}<br>Node Ready: {{.Observability.NodeReady}}</div></div>{{if .Observability.Alerts}}<h3>Firing alerts</h3><table><tr><th>Alert</th><th>Severity</th><th>Description</th></tr>{{range .Observability.Alerts}}<tr><td>{{.Name}}</td><td>{{.Severity}}</td><td>{{.Description}}</td></tr>{{end}}</table>{{end}}</section>
-<section><h2>STORAGE</h2><p>Root: {{.Host.Root}} · /srv/homelab: {{.Host.Homelab}} · backups: {{.Host.Backups}} · data: {{.Host.Data}}</p><p>Local-path PVCs: {{.Cluster.PVCs.Total}} · SMART: {{.Host.SMART}}</p></section><section><h2>BACKUPS</h2><p><strong>NOT CONFIGURED</strong></p><p class="muted">Same-disk restic backup design is not active and is not disaster recovery.</p></section><section><h2>DATA CATALOG</h2><p class="muted">OPTIONAL_DISABLED — metadata-only catalog is prepared but not deployed.</p></section></body></html>`))
+<section><h2>STORAGE</h2><p>Root: {{.Host.Root}} · /srv/homelab: {{.Host.Homelab}} · backups: {{.Host.Backups}} · data: {{.Host.Data}}</p><p>Data hierarchy: {{.Host.Data}}<br>Local-path PVCs: {{.Cluster.PVCs.Total}} · SMART: {{.Host.SMART}} · Samba: DISABLED</p></section><section><h2>BACKUPS <span class="badge {{statusClass .Backups.State}}">{{.Backups.State}}</span></h2><p><strong>NOT DISASTER RECOVERY</strong></p><p>Last backup: {{.Backups.LastBackup}}<br>Last verification: {{.Backups.LastVerification}}<br>K3s snapshot: {{.Backups.Snapshot}}<br>Repository: {{.Backups.Repository}}<br>Next run: {{.Backups.NextRun}}<br>Last error: {{.Backups.LastError}}</p></section><section><h2>DATA CATALOG</h2><p class="muted">OPTIONAL_DISABLED — metadata-only catalog is prepared but not deployed.</p></section></body></html>`))
 
 func main() {
 	listen := flag.String("listen", "127.0.0.1:8090", "listen address")
@@ -88,7 +91,7 @@ func main() {
 	if _, err := rand.Read(buf); err != nil {
 		log.Fatal(err)
 	}
-	a := &app{csrf: hex.EncodeToString(buf), endpoints: *endpoints, kubeconfig: *kubeconfig, promService: *promService, started: time.Now()}
+	a := &app{csrf: hex.EncodeToString(buf), endpoints: *endpoints, kubeconfig: *kubeconfig, promService: *promService, helper: "/usr/local/sbin/homelab-control-helper", started: time.Now()}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", a.health)
 	mux.HandleFunc("/", a.index)
@@ -145,7 +148,7 @@ func (a *app) cluster(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
 	defer cancel()
-	out, err := exec.CommandContext(ctx, "sudo", "-n", "/usr/local/sbin/homelab-control-helper", action).CombinedOutput()
+	out, err := exec.CommandContext(ctx, "sudo", "-n", a.helper, action).CombinedOutput()
 	result := strings.TrimSpace(string(out))
 	if err != nil {
 		result = "FAILED: " + result + " (" + err.Error() + ")"
@@ -165,7 +168,7 @@ func (a *app) snapshot() dashboard {
 		return cached
 	}
 	a.mu.RUnlock()
-	h := collectHost(a.started)
+	h := collectHost(a.started, a.helper)
 	k := collectKubernetes(a.kubeconfig)
 	o := collectObservability(a.kubeconfig, a.promService, k.ServiceClusterIP, h)
 	e := loadEndpoints(a.endpoints)
@@ -176,7 +179,7 @@ func (a *app) snapshot() dashboard {
 	last := a.lastAction
 	a.mu.RUnlock()
 	active, enabled := k3sState()
-	d := dashboard{CSRF: a.csrf, LastAction: last, Host: h, Cluster: k, Observability: o, Endpoints: e, Backups: "NOT CONFIGURED", K3sActive: active, K3sEnabled: enabled}
+	d := dashboard{CSRF: a.csrf, LastAction: last, Host: h, Cluster: k, Observability: o, Endpoints: e, Backups: collectBackups(), K3sActive: active, K3sEnabled: enabled}
 	a.mu.Lock()
 	a.cache, a.cacheAt, a.cacheValid = d, time.Now(), true
 	a.mu.Unlock()
@@ -191,7 +194,7 @@ func command(ctx context.Context, name string, args ...string) string {
 	return strings.TrimSpace(string(out))
 }
 func read(path string) string { b, _ := os.ReadFile(path); return strings.TrimSpace(string(b)) }
-func collectHost(start time.Time) hostStatus {
+func collectHost(start time.Time, helper string) hostStatus {
 	h := hostStatus{Hostname: read("/etc/hostname"), OS: parseOS(), Kernel: command(context.Background(), "uname", "-r"), CPUs: strconv.Itoa(runtime.NumCPU()), ServiceUptime: time.Since(start).Round(time.Second).String(), State: "OK"}
 	h.Uptime = formatSeconds(readFloat("/proc/uptime"))
 	h.Load = first(read("/proc/loadavg"), "unknown")
@@ -208,12 +211,9 @@ func collectHost(start time.Time) hostStatus {
 	h.Backups = filesystem("/srv/homelab/backups")
 	h.Data = filesystem("/srv/homelab/data")
 	h.Route, h.IPv4 = networkInfo()
-	h.UFW = first(command(context.Background(), "ufw", "status"), "UNKNOWN")
+	h.UFW = first(helperOutput(helper, "ufw-status"), "UNKNOWN")
 	h.FailedUnits = strconv.Itoa(countLines(command(context.Background(), "systemctl", "--failed", "--no-legend")))
-	h.SMART = "UNAVAILABLE"
-	if _, err := os.Stat("/dev/sda"); err == nil {
-		h.SMART = first(command(context.Background(), "smartctl", "-H", "/dev/sda"), "UNAVAILABLE")
-	}
+	h.SMART = first(helperOutput(helper, "smart-status"), "UNAVAILABLE")
 	if strings.Contains(h.UFW, "inactive") || h.FailedUnits != "0" {
 		h.State = "WARN"
 	}
@@ -235,11 +235,24 @@ func first(v, fallback string) string {
 }
 func firstField(s, key string) string {
 	for _, line := range strings.Split(s, "\n") {
-		if strings.HasPrefix(line, key+":") {
-			return strings.TrimSpace(strings.TrimPrefix(line, key+":"))
+		if strings.HasPrefix(strings.TrimSpace(line), key) {
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) == 2 {
+				return strings.TrimSpace(parts[1])
+			}
 		}
 	}
 	return "unknown"
+}
+
+func helperOutput(helper, action string) string {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	out, err := exec.CommandContext(ctx, "sudo", "-n", helper, action).Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
 }
 func readFloat(path string) float64 {
 	fields := strings.Fields(read(path))
@@ -504,6 +517,19 @@ func collectObservability(kubeconfig, service, clusterIP string, h hostStatus) o
 		return fmt.Sprint(v.Data.Result[0].Value[1])
 	}
 	o.Prometheus = "AVAILABLE"
+	if grafanaIP := serviceIP(kubeconfig, "observability-grafana", "observability"); grafanaIP != "" {
+		resp, err := (&http.Client{Timeout: 1500 * time.Millisecond}).Get("http://" + grafanaIP + "/api/health")
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+				o.Grafana = "AVAILABLE"
+			} else {
+				o.Grafana = "ERROR"
+			}
+		} else {
+			o.Grafana = "OFFLINE"
+		}
+	}
 	o.Targets = query("count(up)")
 	o.DownTargets = query("count(up == 0)")
 	o.NodeExporter = upState(query(`min(up{job=~".*node-exporter.*"})`))
@@ -518,6 +544,49 @@ func collectObservability(kubeconfig, service, clusterIP string, h hostStatus) o
 		o.State = "OK"
 	}
 	return o
+}
+
+func serviceIP(kubeconfig, name, namespace string) string {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	b := kubectl(ctx, kubeconfig, "get", "service", name, "-n", namespace, "-o", "json")
+	var service struct {
+		Spec struct {
+			ClusterIP string `json:"clusterIP"`
+		} `json:"spec"`
+	}
+	if json.Unmarshal(b, &service) != nil {
+		return ""
+	}
+	return service.Spec.ClusterIP
+}
+
+func collectBackups() backupStatus {
+	b := backupStatus{State: "NOT CONFIGURED", LastBackup: "NOT RUN", LastVerification: "NOT RUN", Snapshot: "NOT FOUND", Repository: "UNKNOWN", LastError: "NONE", NextRun: "UNKNOWN"}
+	for _, line := range strings.Split(read("/var/lib/homelab-backup/status.env"), "\n") {
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		value := strings.TrimSpace(parts[1])
+		switch parts[0] {
+		case "STATE":
+			b.State = value
+		case "LAST_BACKUP":
+			b.LastBackup = value
+		case "LAST_VERIFICATION":
+			b.LastVerification = value
+		case "LATEST_K3S_SNAPSHOT":
+			b.Snapshot = value
+		case "REPOSITORY":
+			b.Repository = value
+		case "LAST_ERROR":
+			b.LastError = value
+		case "NEXT_RUN":
+			b.NextRun = value
+		}
+	}
+	return b
 }
 func upState(v string) string {
 	if v == "1" {

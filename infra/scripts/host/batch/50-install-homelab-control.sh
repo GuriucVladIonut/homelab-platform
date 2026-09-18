@@ -7,7 +7,7 @@ step() { printf '\n===== %s =====\n' "$1"; }
 fail() { printf 'ERROR: %s\n' "$1" >&2; exit 1; }
 step 'Validate prerequisites'
 [[ "$(id -u)" -eq 0 ]] || fail 'run with sudo'
-for command_name in apt-get systemctl visudo useradd groupadd getent id install ss curl; do command -v "$command_name" >/dev/null || fail "missing $command_name"; done
+for command_name in apt-get systemctl visudo useradd groupadd getent id install ss curl ufw smartctl awk; do command -v "$command_name" >/dev/null || fail "missing $command_name"; done
 [[ -f "$ROOT_DIR/apps/homelab-control/go.mod" ]] || fail 'control source missing'
 if ! command -v go >/dev/null; then
   step 'Install Go build dependency'
@@ -29,11 +29,23 @@ install -m 0755 -o root -g root /dev/stdin /usr/local/sbin/homelab-control-helpe
 set -Eeuo pipefail
 [[ "$(id -u)" -eq 0 ]] || exit 1
 case "${1:-}" in
- status) systemctl status --no-pager k3s ;; start) systemctl start k3s ;; stop) systemctl stop k3s ;; restart) systemctl restart k3s ;; autostart-enable) systemctl enable k3s ;; autostart-disable) systemctl disable k3s ;; *) exit 64 ;;
+ status) printf 'active=%s enabled=%s\n' "$(systemctl is-active k3s || true)" "$(systemctl is-enabled k3s || true)" ;;
+ start) systemctl start k3s ;;
+ stop) systemctl stop k3s ;;
+ restart) systemctl restart k3s ;;
+ autostart-enable) systemctl enable k3s ;;
+ autostart-disable) systemctl disable k3s ;;
+ ufw-status) ufw status | awk 'NR == 1 {print; exit}' ;;
+ smart-status)
+   health=$(smartctl -H /dev/sda 2>/dev/null | awk '/SMART overall-health self-assessment test result:/ {print $NF; found=1} END {if (!found) print "UNAVAILABLE"}')
+   temperature=$(smartctl -A /dev/sda 2>/dev/null | awk 'tolower($0) ~ /temperature_celsius|airflow_temperature_cel/ {print $(NF-1) " C"; exit}')
+   if [[ -n "$temperature" ]]; then printf 'SMART: %s; temperature: %s\n' "$health" "$temperature"; else printf 'SMART: %s\n' "$health"; fi
+   ;;
+ *) exit 64 ;;
 esac
 HELPER
 install -m 0440 -o root -g root /dev/stdin /etc/sudoers.d/homelab-control <<'SUDOERS'
-Cmnd_Alias HOMELAB_CONTROL = /usr/local/sbin/homelab-control-helper status, /usr/local/sbin/homelab-control-helper start, /usr/local/sbin/homelab-control-helper stop, /usr/local/sbin/homelab-control-helper restart, /usr/local/sbin/homelab-control-helper autostart-enable, /usr/local/sbin/homelab-control-helper autostart-disable
+Cmnd_Alias HOMELAB_CONTROL = /usr/local/sbin/homelab-control-helper status, /usr/local/sbin/homelab-control-helper start, /usr/local/sbin/homelab-control-helper stop, /usr/local/sbin/homelab-control-helper restart, /usr/local/sbin/homelab-control-helper autostart-enable, /usr/local/sbin/homelab-control-helper autostart-disable, /usr/local/sbin/homelab-control-helper ufw-status, /usr/local/sbin/homelab-control-helper smart-status
 homelab-control ALL=(root) NOPASSWD: HOMELAB_CONTROL
 SUDOERS
 visudo -cf /etc/sudoers.d/homelab-control
@@ -47,7 +59,10 @@ User=homelab-control
 Group=homelab-control
 ExecStart=/opt/homelab/control/homelab-control -listen 127.0.0.1:8090 -endpoints /opt/homelab/control/endpoints.yaml -kubeconfig /opt/homelab/control/kubeconfig-reader
 Restart=on-failure
-NoNewPrivileges=yes
+# sudo is intentionally allowed only for the fixed root-owned helper commands
+# listed above. Keeping this service's other hardening in place limits the
+# consequence of the narrowly-scoped NoNewPrivileges exception.
+NoNewPrivileges=no
 PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=yes

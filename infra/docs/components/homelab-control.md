@@ -8,4 +8,8 @@ The UI health model is `OK`, `DEGRADED`, `ERROR`, `OFFLINE`, `UNKNOWN`, or
 `DISABLED`. Kubernetes and Prometheus failures degrade those sections while the
 host section and cluster controls remain available. Endpoint probes are limited
 to enabled registry entries, use short timeouts, and never accept URLs from
-requests. Backups intentionally show `NOT CONFIGURED`.
+requests. UFW and SMART summaries use two additional fixed, read-only helper
+actions. The service's `NoNewPrivileges` exception is narrowly scoped to the
+root-owned helper command list; the web process still has no arbitrary root
+execution path. Backups show timer/repository status and prominently say
+`NOT DISASTER RECOVERY` once the backup baseline is installed.

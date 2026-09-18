@@ -63,6 +63,34 @@ The host and Kubernetes platform is testable: the operator has verified the k3s 
 
 Household-data applications remain disabled until platform health and backups are stable. Add catalog, media, and file-sharing components individually with no public exposure.
 
+## Phase H — same-disk operational backup baseline
+
+Create the restic password manually, then install and validate the baseline:
+
+```bash
+sudo install -d -m 0700 /etc/homelab
+sudo sh -c 'umask 077; read -r -s -p "Restic password: " p; printf "\\n" >&2; printf "%s" "$p" > /etc/homelab/restic-password'
+sudo sh -c 'printf "%s\\n" "RESTIC_REPOSITORY=/srv/homelab/backups/restic" "RESTIC_PASSWORD_FILE=/etc/homelab/restic-password" > /etc/homelab/restic.env; chmod 0600 /etc/homelab/restic.env /etc/homelab/restic-password'
+sudo ./infra/scripts/host/batch/70-install-backup-baseline.sh
+sudo systemctl start homelab-backup.service
+sudo ./infra/scripts/host/batch/71-validate-backups.sh
+```
+
+This is **NOT DISASTER RECOVERY**: it is same-disk operational rollback only.
+Do not put the password in Git or Markdown. The backup timer must be green and
+the temporary restore test must pass before Phase J is considered.
+
+## Phase I — data layout preparation
+
+After the backup baseline is green:
+
+```bash
+sudo ./infra/scripts/host/batch/72-prepare-data-layout.sh
+```
+
+This creates empty canonical directories and does not move personal files.
+Samba remains disabled.
+
 ## Batch 4 — optional file-share foundation
 
 Run only after explicit approval:

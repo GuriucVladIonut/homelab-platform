@@ -13,6 +13,15 @@ spec:
         kind: HelmRepository
         name: prometheus-community
   values:
+    defaultRules:
+      rules:
+        kubeProxy: false
+        kubeControllerManager: false
+        kubeScheduler: false
+      disabled:
+        Watchdog: true
+        PrometheusNotConnectedToAlertmanagers: true
+        CPUThrottlingHigh: true
     prometheus:
       prometheusSpec:
         retention: 7d

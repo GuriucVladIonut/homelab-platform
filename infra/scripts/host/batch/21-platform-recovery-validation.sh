@@ -5,7 +5,7 @@ set -Eeuo pipefail
 step() { printf '\n===== %s =====\n' "$1"; }
 fail() { printf 'ERROR: %s\n' "$1" >&2; exit 1; }
 [[ $EUID -eq 0 ]] || fail 'run as root'
-for command_name in systemctl kubectl flux swapon ufw ss; do
+for command_name in systemctl kubectl flux swapon ufw ss restic date stat; do
   command -v "$command_name" >/dev/null || fail "missing prerequisite: $command_name"
 done
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
@@ -49,6 +49,24 @@ step 'TLS and platform state'
 kubectl get clusterissuer letsencrypt-staging-cloudflare
 kubectl -n ingress get certificate homelab-wildcard-staging
 kubectl -n ingress get tlsstore default
+step 'Backup and storage baseline'
+systemctl is-enabled --quiet homelab-backup.timer || fail 'backup timer is not enabled'
+systemctl is-active --quiet homelab-backup.timer || fail 'backup timer is not active'
+[[ -r /etc/homelab/restic.env ]] || fail 'restic environment is missing'
+source /etc/homelab/restic.env
+[[ -n ${RESTIC_REPOSITORY:-} && -n ${RESTIC_PASSWORD_FILE:-} ]] || fail 'restic environment variables are missing'
+export RESTIC_REPOSITORY RESTIC_PASSWORD_FILE
+[[ -r ${RESTIC_PASSWORD_FILE:-} ]] || fail 'restic password file is missing'
+restic snapshots --latest 1 >/dev/null || fail 'restic repository is not accessible'
+[[ -s /srv/homelab/backups/k3s/latest ]] || fail 'latest k3s snapshot link is missing'
+[[ -r /var/lib/homelab-backup/status.env ]] || fail 'backup status file is missing'
+grep -q '^STATE=OK$' /var/lib/homelab-backup/status.env || fail 'last backup did not succeed'
+last_backup=$(awk -F= '$1 == "LAST_BACKUP" {print $2}' /var/lib/homelab-backup/status.env)
+last_backup_epoch=$(date -d "$last_backup" +%s 2>/dev/null || printf 0)
+(( last_backup_epoch > 0 && $(date +%s) - last_backup_epoch < 172800 )) || fail 'latest backup is older than 48 hours'
+grep -q '^LAST_VERIFICATION=[^[:space:]]' /var/lib/homelab-backup/status.env || fail 'backup verification has not succeeded'
+[[ -d /srv/homelab/data ]] || fail 'canonical data directory is missing'
+[[ "$(stat -c '%U:%G %a' /srv/homelab/data)" == 'root:homelab-data 2770' ]] || fail 'data directory ownership or mode is unsafe'
 step 'Unexpected application ports'
 ss -lntup | grep -E ':(6443|10250|3000|9090|8090)\b' || true
 printf '%s\n' 'Platform recovery validation passed.'
