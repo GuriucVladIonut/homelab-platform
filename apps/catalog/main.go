@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -68,6 +69,7 @@ func main() {
 	}
 	a := &app{db: db, log: logg}
 	mux := http.NewServeMux()
+	mux.HandleFunc("/", a.index)
 	mux.HandleFunc("/healthz", a.health)
 	mux.HandleFunc("/api/items", a.items)
 	mux.HandleFunc("/api/stats", a.stats)
@@ -101,6 +103,31 @@ func (a *app) health(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = io.WriteString(w, "ok\n")
+}
+func (a *app) index(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+	rows, err := a.db.QueryContext(r.Context(), `SELECT title,media_type,relative_path,size_bytes,status FROM media_item ORDER BY discovered_at DESC LIMIT 100`)
+	if err != nil {
+		http.Error(w, "query failed", 500)
+		return
+	}
+	defer rows.Close()
+	type row struct {
+		Title, Type, Path, Status string
+		Size                      int64
+	}
+	data := struct{ Rows []row }{Rows: []row{}}
+	for rows.Next() {
+		var x row
+		if rows.Scan(&x.Title, &x.Type, &x.Path, &x.Size, &x.Status) == nil {
+			data.Rows = append(data.Rows, x)
+		}
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_ = catalogPage.Execute(w, data)
 }
 func (a *app) items(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -175,3 +202,5 @@ func discover(path string) error {
 	}
 	return nil
 }
+
+var catalogPage = template.Must(template.New("catalog").Parse(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Homelab Catalog</title><style>body{font:16px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:.5rem;border-bottom:1px solid #ccc}code{overflow-wrap:anywhere}</style><h1>Homelab Catalog</h1><p>Metadata only. Files remain on the homelab filesystem.</p>{{if .Rows}}<table><tr><th>Title</th><th>Type</th><th>Path</th><th>Size</th><th>Status</th></tr>{{range .Rows}}<tr><td>{{.Title}}</td><td>{{.Type}}</td><td><code>{{.Path}}</code></td><td>{{.Size}}</td><td>{{.Status}}</td></tr>{{end}}</table>{{else}}<p>No catalog items yet.</p>{{end}}`))
