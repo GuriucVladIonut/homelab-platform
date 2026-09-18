@@ -80,7 +80,11 @@ else
 fi
 step 'Validate'
 systemctl is-active --quiet homelab-control || fail 'service inactive'
-ss -lnt | grep -Eq '127\.0\.0\.1:8090' || fail 'service is not loopback-bound'
+for attempt in {1..10}; do
+  if ss -lnt | grep -Eq '127\.0\.0\.1:8090'; then break; fi
+  sleep 1
+done
+ss -lnt | grep -Eq '127\.0\.0\.1:8090' || { systemctl status homelab-control --no-pager >&2 || true; fail 'service is not loopback-bound'; }
 for attempt in {1..10}; do
   if curl --fail --silent --show-error http://127.0.0.1:8090/healthz | grep -Fxq ok; then break; fi
   sleep 1
