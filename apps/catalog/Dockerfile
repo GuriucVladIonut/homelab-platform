@@ -1,4 +1,4 @@
-FROM golang:1.22.7-bookworm AS build
+FROM docker.io/library/golang:1.22.7-bookworm AS build
 WORKDIR /src
 COPY go.mod ./
 RUN go mod download
