@@ -13,7 +13,9 @@ key_file=${SOPS_AGE_KEY_FILE:-$operator_home/.config/sops/age/keys.txt}
 [[ -r $key_file ]] || fail "age key is not readable: $key_file"
 secret_dir="$repo_root/infra/infrastructure/postgresql"
 secret_file="$secret_dir/postgresql-credentials.sops.yaml"
-[[ ! -e $secret_file ]] || fail 'encrypted PostgreSQL Secret already exists; refusing to replace it'
+catalog_secret_dir="$repo_root/infra/infrastructure/catalog"
+catalog_secret_file="$catalog_secret_dir/postgresql-credentials.sops.yaml"
+[[ ! -e $secret_file && ! -e $catalog_secret_file ]] || fail 'encrypted PostgreSQL Secret already exists; refusing to replace it'
 tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT
 password=$(openssl rand -hex 32)
 cat >"$tmp" <<EOF
@@ -26,19 +28,10 @@ type: Opaque
 stringData:
   username: catalog
   password: $password
-  database-url: postgres://catalog:$password@postgresql.database.svc.cluster.local:5432/homelab?sslmode=disable
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: postgresql-credentials
-  namespace: catalog
-type: Opaque
-stringData:
-  username: catalog
-  password: $password
-  database-url: postgres://catalog:$password@postgresql.database.svc.cluster.local:5432/homelab?sslmode=disable
 EOF
 SOPS_AGE_KEY_FILE="$key_file" sops --encrypt "$tmp" >"$secret_file"
-chmod 0600 "$secret_file"; printf '%s\n' 'Created encrypted PostgreSQL credentials; plaintext was not displayed.'
-printf '%s\n' 'Next: add the encrypted file to postgresql/kustomization.yaml, copy phase-j.yaml.example to phase-j.yaml, add it to infra/gitops/kustomization.yaml, and commit.'
+sed 's/namespace: database/namespace: catalog/' "$tmp" >"$tmp.catalog"
+SOPS_AGE_KEY_FILE="$key_file" sops --encrypt "$tmp.catalog" >"$catalog_secret_file"
+chmod 0600 "$secret_file" "$catalog_secret_file"; rm -f "$tmp.catalog"
+printf '%s\n' 'Created encrypted PostgreSQL and catalog credentials; plaintext was not displayed.'
+printf '%s\n' 'Next: add each encrypted file to its local Kustomization, copy phase-j.yaml.example to phase-j.yaml, add it to infra/gitops/kustomization.yaml, and commit.'

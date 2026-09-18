@@ -8,7 +8,9 @@ from the catalog namespace. This is intentionally not HA; the single-node
 homelab has no distributed storage requirement.
 
 Credentials are generated locally and encrypted with SOPS/age by
-`74-prepare-postgresql-activation.sh`. No plaintext credential belongs in Git.
+`74-prepare-postgresql-activation.sh`; it writes one Secret manifest per
+namespace because Kustomize does not permit cross-directory resource loading.
+No plaintext credential belongs in Git.
 The catalog image is built locally and imported into k3s because this project
 does not yet publish an image registry. The Phase J Flux Kustomizations must
 not be enabled until both the encrypted Secret and image are present.
