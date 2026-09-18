@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: catalog
+  namespace: catalog
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`catalog.homelab.gvlad.dev`)
+      kind: Rule
+      middlewares:
+        - name: security-headers
+          namespace: ingress
+      services:
+        - name: catalog
+          port: 8080
+  tls: {}

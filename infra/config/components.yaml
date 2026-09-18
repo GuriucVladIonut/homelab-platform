@@ -31,7 +31,7 @@ components:
     state: DEPLOYED
   - name: postgresql-catalog
     classification: OPTIONAL
-    state: OPTIONAL_DISABLED
+    state: PREPARED_GATED_ON_SECRET_AND_IMAGE
   - name: samba
     classification: OPTIONAL
     state: OPTIONAL_DISABLED

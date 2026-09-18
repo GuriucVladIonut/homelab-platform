@@ -90,6 +90,36 @@ sudo ./infra/scripts/host/batch/72-prepare-data-layout.sh
 This creates empty canonical directories and does not move personal files.
 Samba remains disabled.
 
+## Phase J — PostgreSQL and catalog activation
+
+Prepare the encrypted database Secret without displaying its generated password:
+
+```bash
+sudo ./infra/scripts/host/batch/74-prepare-postgresql-activation.sh "$PWD"
+```
+
+Build/import the catalog image on a host with Docker or Buildah, then load it
+into k3s containerd without publishing it:
+
+```bash
+sudo ./infra/scripts/host/batch/75-build-catalog-image.sh "$PWD"
+docker save homelab-catalog:0.1.0 | sudo k3s ctr images import -
+```
+
+Only after the backup baseline is green, add the encrypted Secret to the
+PostgreSQL and catalog Kustomizations, copy
+`infra/gitops/flux-system/phase-j.yaml.example` to `phase-j.yaml`, and add it
+to `infra/gitops/kustomization.yaml`. Validate PostgreSQL readiness, PVC Bound,
+catalog health, private HTTPS, `pg_dump`, and a temporary logical restore
+before enabling Phase K.
+
+## Phase K — media services
+
+Phase K is intentionally not enabled by the Phase J preparation. Enable
+Jellyfin, Navidrome, and one book service individually only after the Phase J
+restore gate is green. Use read-only canonical media mounts and private
+Traefik routes; keep photos/Immich disabled.
+
 ## Batch 4 — optional file-share foundation
 
 Run only after explicit approval:

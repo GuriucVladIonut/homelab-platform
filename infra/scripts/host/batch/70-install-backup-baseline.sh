@@ -51,6 +51,15 @@ source /etc/homelab/restic.env
 [[ -n ${RESTIC_REPOSITORY:-} && -n ${RESTIC_PASSWORD_FILE:-} ]] || { write_status NOT_CONFIGURED '' '' '' 'missing restic variables'; exit 1; }
 [[ -r $RESTIC_PASSWORD_FILE ]] || { write_status NOT_CONFIGURED '' '' '' 'missing restic password file'; exit 1; }
 export RESTIC_REPOSITORY RESTIC_PASSWORD_FILE
+db_dump=/srv/homelab/backups/db
+if command -v kubectl >/dev/null && KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n database get statefulset postgresql >/dev/null 2>&1; then
+  pod=$(KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n database get pod -l app.kubernetes.io/name=postgresql -o jsonpath='{.items[0].metadata.name}')
+  [[ -n $pod ]] || { write_status FAILED '' '' '' 'postgresql pod not available for dump'; exit 1; }
+  stamp=$(date -u +%Y%m%dT%H%M%SZ)
+  KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n database exec "$pod" -- sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=plain --no-owner --no-privileges' >"$db_dump/homelab-$stamp.sql"
+  KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n database exec "$pod" -- sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --schema-only --no-owner --no-privileges' >"$db_dump/homelab-schema-$stamp.sql"
+  chmod 0600 "$db_dump"/*.sql
+fi
 snapshot=$(/usr/local/sbin/homelab-k3s-snapshot)
 sources=(/etc/rancher/k3s/config.yaml /etc/rancher/k3s/config.yaml.d /opt/homelab /srv/homelab/volumes/apps /srv/homelab/volumes/observability /srv/homelab/backups/k3s /srv/homelab/backups/db)
 last=$(date -u +%Y-%m-%dT%H:%M:%SZ)

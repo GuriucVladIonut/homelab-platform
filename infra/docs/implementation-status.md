@@ -22,7 +22,7 @@ Loki/Alloy and OpenSearch are not enabled.
 
 ## Applications and storage
 
-`apps/homelab-control` is DEPLOYED outside Kubernetes as a standard-library Go loopback service under the non-root `homelab-control` account. Phase F dashboard code now exposes host telemetry, k3s controls, bounded Kubernetes summaries, private endpoint state, Prometheus target/alert summaries, storage, and an explicit backup-not-configured state. It has CSRF, POST-only state changes, confirmation for stop/restart, HTML escaping, security headers, and a fixed sudo helper boundary. Kubernetes reads use Git-managed get/list/watch-only RBAC and a root-owned mode-0640 reader kubeconfig. `apps/catalog` is OPTIONAL_DISABLED source and schema for PostgreSQL metadata/audit only; media remains on host storage and physical deletion is not implemented in the baseline. Samba is an optional disabled package foundation with no accounts, passwords, or shares.
+`apps/homelab-control` is DEPLOYED outside Kubernetes as a standard-library Go loopback service under the non-root `homelab-control` account. Phase F dashboard code now exposes host telemetry, k3s controls, bounded Kubernetes summaries, private endpoint state, Prometheus target/alert summaries, storage, and an explicit backup-not-configured state. It has CSRF, POST-only state changes, confirmation for stop/restart, HTML escaping, security headers, and a fixed sudo helper boundary. Kubernetes reads use Git-managed get/list/watch-only RBAC and a root-owned mode-0640 reader kubeconfig. `apps/catalog` is a production-oriented metadata-only service prepared behind PostgreSQL; media remains on host storage and physical deletion is not implemented. Samba is an optional disabled package foundation with no accounts, passwords, or shares.
 
 ## DNS and secrets
 
@@ -51,5 +51,8 @@ rollback and **NOT DISASTER RECOVERY**. It excludes media and transient runtime
 data, uses seven daily/four weekly/three monthly retention, and provides a
 temporary restore validator. The password remains outside Git in a root-only
 file. The canonical `/srv/homelab/data` tree is prepared by a separate script;
-Samba remains `OPTIONAL_DISABLED`. PostgreSQL/catalog remains disabled until
-backup installation and temporary restore validation are complete.
+Samba remains `OPTIONAL_DISABLED`. PostgreSQL/catalog is now prepared as a
+single PostgreSQL 16.4 StatefulSet plus private metadata-only catalog, gated on
+an encrypted Secret and locally loaded image. Logical dumps are integrated into
+the same-disk Restic run; this remains **NOT DISASTER RECOVERY**. Phase K media
+services remain optional-disabled until Phase J restore validation is green.

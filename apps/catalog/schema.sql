@@ -1,19 +1,6 @@
-CREATE TABLE media (
-  id uuid PRIMARY KEY,
-  media_type text NOT NULL,
-  title text NOT NULL,
-  canonical_path text NOT NULL,
-  filename text NOT NULL,
-  mime_type text,
-  size_bytes bigint NOT NULL CHECK (size_bytes >= 0),
-  sha256 text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  ingested_at timestamptz,
-  source text NOT NULL,
-  tags jsonb NOT NULL DEFAULT '[]',
-  description text,
-  status text NOT NULL,
-  UNIQUE (sha256)
-);
-CREATE TABLE media_audit (id bigserial PRIMARY KEY, media_id uuid NOT NULL, action text NOT NULL, actor text NOT NULL, changed_at timestamptz NOT NULL DEFAULT now(), before_state jsonb, after_state jsonb);
+CREATE TABLE IF NOT EXISTS media_item (id uuid PRIMARY KEY, media_type text NOT NULL CHECK (media_type IN ('music','book','movie','photo','other')), title text NOT NULL, description text, created_at timestamptz NOT NULL DEFAULT now(), discovered_at timestamptz NOT NULL DEFAULT now(), modified_at timestamptz, status text NOT NULL DEFAULT 'discovered');
+CREATE TABLE IF NOT EXISTS file_asset (id uuid PRIMARY KEY, media_item_id uuid NOT NULL REFERENCES media_item(id) ON DELETE CASCADE, canonical_path text NOT NULL UNIQUE, relative_path text NOT NULL UNIQUE, filename text NOT NULL, extension text NOT NULL DEFAULT '', size_bytes bigint NOT NULL CHECK (size_bytes >= 0), sha256 text NOT NULL, mime_type text, duplicate_of uuid REFERENCES file_asset(id), created_at timestamptz NOT NULL DEFAULT now(), UNIQUE (sha256));
+CREATE TABLE IF NOT EXISTS tag (id uuid PRIMARY KEY, name text NOT NULL UNIQUE);
+CREATE TABLE IF NOT EXISTS media_item_tag (media_item_id uuid NOT NULL REFERENCES media_item(id) ON DELETE CASCADE, tag_id uuid NOT NULL REFERENCES tag(id) ON DELETE CASCADE, PRIMARY KEY (media_item_id, tag_id));
+CREATE TABLE IF NOT EXISTS ingest_event (id bigserial PRIMARY KEY, file_asset_id uuid REFERENCES file_asset(id) ON DELETE SET NULL, status text NOT NULL, message text, created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS media_item_type_idx ON media_item(media_type); CREATE INDEX IF NOT EXISTS media_item_title_idx ON media_item(title); CREATE INDEX IF NOT EXISTS ingest_event_created_idx ON ingest_event(created_at);

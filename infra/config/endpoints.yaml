@@ -98,6 +98,15 @@ endpoints:
     health_path: /
     documentation: docs/components/media.md
     enabled: false
+  - name: catalog.homelab.gvlad.dev
+    category: catalog
+    namespace: catalog
+    exposure: private
+    private_url: https://catalog.homelab.gvlad.dev
+    public_url: null
+    health_path: /healthz
+    documentation: docs/components/catalog.md
+    enabled: false
   - name: siem.homelab.gvlad.dev
     category: security
     namespace: security
