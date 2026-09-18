@@ -13,5 +13,8 @@ elif command -v buildah >/dev/null; then
 else
   fail 'install one image builder first: sudo apt-get install --yes podman'
 fi
+if command -v podman >/dev/null && podman image exists localhost/homelab-catalog:0.1.0; then
+  podman tag localhost/homelab-catalog:0.1.0 homelab-catalog:0.1.0
+fi
 printf '%s\n' 'Catalog image built. Load it into k3s containerd before enabling the Flux catalog Kustomization:'
 printf '%s\n' 'podman save homelab-catalog:0.1.0 | sudo k3s ctr images import -'
