@@ -39,8 +39,8 @@ type endpoint struct {
 	Enabled                                                                                      bool
 }
 type hostStatus struct {
-	Hostname, OS, Kernel, Uptime, ServiceUptime, CPUModel, Load, Route, IPv4, UFW, FailedUnits                                   string
-	CPUs, RAMTotal, RAMUsed, RAMAvailable, RAMPercent, ZRAMSize, ZRAMUsed, ZRAMState, Root, Homelab, Backups, Data, SMART, State string
+	Hostname, OS, Kernel, Uptime, ServiceUptime, CPUModel, Load, Route, IPv4, UFW, FailedUnits                                                                 string
+	CPUs, RAMTotal, RAMUsed, RAMAvailable, RAMPercent, ZRAMSize, ZRAMUsed, ZRAMState, Root, Homelab, Backups, Data, Movies, Music, Books, Photos, SMART, State string
 }
 type workloadSummary struct{ Ready, Total int }
 type unhealthy struct{ Kind, Namespace, Name, Status string }
@@ -60,6 +60,7 @@ type observabilityStatus struct {
 type backupStatus struct {
 	State, LastBackup, LastVerification, Snapshot, Repository, LastError, NextRun string
 }
+type dnsStatus struct{ State, Resolver, Records, Query string }
 type dashboard struct {
 	CSRF, LastAction      string
 	Host                  hostStatus
@@ -67,6 +68,7 @@ type dashboard struct {
 	Observability         observabilityStatus
 	Endpoints             []endpoint
 	Backups               backupStatus
+	DNS                   dnsStatus
 	K3sActive, K3sEnabled bool
 }
 
@@ -121,10 +123,26 @@ func (a *app) index(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if err := page.Execute(w, a.snapshot()); err != nil {
+	d := a.snapshot()
+	var rendered strings.Builder
+	if err := page.Execute(&rendered, d); err != nil {
 		log.Printf("render dashboard: %v", err)
+		return
 	}
+	supplement := fmt.Sprintf(`<section><h2>MEDIA</h2><p>Jellyfin: %s · Navidrome: %s · Books: %s · Photos: DISABLED</p><p>Movies: %s<br>Music: %s<br>Books: %s<br>Photos: %s</p></section><section><h2>PRIVATE DNS <span class="badge %s">%s</span></h2><p>Resolver: %s · Records: %s · Query: %s</p><p class="muted">Opt-in resolver only; household DNS remains unchanged.</p></section>`,
+		template.HTMLEscapeString(endpointNamed(d.Endpoints, "media.homelab.gvlad.dev")), template.HTMLEscapeString(endpointNamed(d.Endpoints, "music.homelab.gvlad.dev")), template.HTMLEscapeString(endpointNamed(d.Endpoints, "books.homelab.gvlad.dev")), template.HTMLEscapeString(d.Host.Movies), template.HTMLEscapeString(d.Host.Music), template.HTMLEscapeString(d.Host.Books), template.HTMLEscapeString(d.Host.Photos), statusClass(d.DNS.State), template.HTMLEscapeString(d.DNS.State), template.HTMLEscapeString(d.DNS.Resolver), template.HTMLEscapeString(d.DNS.Records), template.HTMLEscapeString(d.DNS.Query))
+	_, _ = io.WriteString(w, strings.Replace(rendered.String(), "</body>", supplement+"</body>", 1))
 }
+
+func endpointNamed(endpoints []endpoint, name string) string {
+	for _, e := range endpoints {
+		if e.Name == name {
+			return e.State
+		}
+	}
+	return "DISABLED"
+}
+func statusClass(s string) string { return strings.ToLower(strings.ReplaceAll(s, " ", "-")) }
 func (a *app) cluster(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "POST required", http.StatusMethodNotAllowed)
@@ -179,7 +197,7 @@ func (a *app) snapshot() dashboard {
 	last := a.lastAction
 	a.mu.RUnlock()
 	active, enabled := k3sState()
-	d := dashboard{CSRF: a.csrf, LastAction: last, Host: h, Cluster: k, Observability: o, Endpoints: e, Backups: collectBackups(), K3sActive: active, K3sEnabled: enabled}
+	d := dashboard{CSRF: a.csrf, LastAction: last, Host: h, Cluster: k, Observability: o, Endpoints: e, Backups: collectBackups(), DNS: collectDNS(), K3sActive: active, K3sEnabled: enabled}
 	a.mu.Lock()
 	a.cache, a.cacheAt, a.cacheValid = d, time.Now(), true
 	a.mu.Unlock()
@@ -192,6 +210,17 @@ func command(ctx context.Context, name string, args ...string) string {
 		return ""
 	}
 	return strings.TrimSpace(string(out))
+}
+func collectDNS() dnsStatus {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if command(ctx, "systemctl", "is-active", "dnsmasq") != "active" {
+		return dnsStatus{State: "OFFLINE", Resolver: "127.0.0.1", Records: "7", Query: "FAILED"}
+	}
+	if command(ctx, "getent", "ahostsv4", "catalog.homelab.gvlad.dev") == "" {
+		return dnsStatus{State: "DEGRADED", Resolver: "127.0.0.1", Records: "7", Query: "FAILED"}
+	}
+	return dnsStatus{State: "OK", Resolver: "127.0.0.1", Records: "7", Query: "OK"}
 }
 func read(path string) string { b, _ := os.ReadFile(path); return strings.TrimSpace(string(b)) }
 func collectHost(start time.Time, helper string) hostStatus {
@@ -210,6 +239,10 @@ func collectHost(start time.Time, helper string) hostStatus {
 	h.Homelab = filesystem("/srv/homelab")
 	h.Backups = filesystem("/srv/homelab/backups")
 	h.Data = filesystem("/srv/homelab/data")
+	h.Movies = filesystem("/srv/homelab/data/movies")
+	h.Music = filesystem("/srv/homelab/data/music")
+	h.Books = filesystem("/srv/homelab/data/books")
+	h.Photos = filesystem("/srv/homelab/data/photos")
 	h.Route, h.IPv4 = networkInfo()
 	h.UFW = first(helperOutput(helper, "ufw-status"), "UNKNOWN")
 	h.FailedUnits = strconv.Itoa(countLines(command(context.Background(), "systemctl", "--failed", "--no-legend")))

@@ -55,4 +55,9 @@ Samba remains `OPTIONAL_DISABLED`. PostgreSQL/catalog is now prepared as a
 single PostgreSQL 16.4 StatefulSet plus private metadata-only catalog, gated on
 an encrypted Secret and locally loaded image. Logical dumps are integrated into
 the same-disk Restic run; this remains **NOT DISASTER RECOVERY**. Phase K media
-services remain optional-disabled until Phase J restore validation is green.
+services are `IMPLEMENTED_IN_REPO` as pinned Jellyfin, Navidrome, and Kavita
+workloads with read-only canonical media mounts, separate config PVCs, private
+routes, local middleware, NetworkPolicies, and sequential Flux Kustomizations.
+Photos/Immich remain `OPTIONAL_DISABLED`. Phase L host-level private DNS is
+`IMPLEMENTED_IN_REPO` and remains opt-in until the operator runs its sudo
+installer; it does not alter router DHCP or public DNS.

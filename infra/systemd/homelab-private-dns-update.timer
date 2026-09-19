@@ -1,0 +1,10 @@
+[Unit]
+Description=Refresh private homelab DNS after network changes
+
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=60s
+Unit=homelab-private-dns-update.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: books, namespace: media, labels: {app.kubernetes.io/name: books, app.kubernetes.io/part-of: homelab-media}}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app.kubernetes.io/name: books}}
+  template:
+    metadata: {labels: {app.kubernetes.io/name: books}}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsUser: 1000, runAsGroup: 1000, runAsNonRoot: true, fsGroup: 1000, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: books
+          image: docker.io/jvmilazz0/kavita:0.8.4
+          imagePullPolicy: IfNotPresent
+          ports: [{name: http, containerPort: 5000}]
+          securityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}
+          resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {cpu: 300m, memory: 512Mi}}
+          readinessProbe: {httpGet: {path: /, port: http}, initialDelaySeconds: 20, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /, port: http}, initialDelaySeconds: 45, periodSeconds: 20}
+          volumeMounts: [{name: config, mountPath: /kavita/config}, {name: books, mountPath: /books, readOnly: true}]
+      volumes: [{name: config, persistentVolumeClaim: {claimName: books-config}}, {name: books, persistentVolumeClaim: {claimName: books-library}}]

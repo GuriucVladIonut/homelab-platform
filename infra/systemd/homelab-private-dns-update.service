@@ -1,0 +1,16 @@
+[Unit]
+Description=Update dynamic private homelab DNS records
+After=network-online.target dnsmasq.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/homelab-private-dns-update
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/etc/dnsmasq.d
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

@@ -12,3 +12,4 @@ resources:
   - infrastructure-observability-config.yaml
   - apps-validation.yaml
   - phase-j.yaml
+  - phase-k.yaml

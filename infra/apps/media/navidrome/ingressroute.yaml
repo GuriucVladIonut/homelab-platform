@@ -1,0 +1,11 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata: {name: navidrome, namespace: media}
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`music.homelab.gvlad.dev`)
+      kind: Rule
+      middlewares: [{name: security-headers}]
+      services: [{name: navidrome, port: 4533}]
+  tls: {}

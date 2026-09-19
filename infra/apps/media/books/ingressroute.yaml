@@ -1,0 +1,11 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata: {name: books, namespace: media}
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`books.homelab.gvlad.dev`)
+      kind: Rule
+      middlewares: [{name: security-headers}]
+      services: [{name: books, port: 5000}]
+  tls: {}

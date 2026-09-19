@@ -1,0 +1,9 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: jellyfin, namespace: media}
+spec:
+  podSelector: {matchLabels: {app.kubernetes.io/name: jellyfin}}
+  policyTypes: [Ingress, Egress]
+  ingress: [{from: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: ingress}}}], ports: [{protocol: TCP, port: 8096}]}]
+  egress:
+    - ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}, {protocol: TCP, port: 443}, {protocol: TCP, port: 80}]

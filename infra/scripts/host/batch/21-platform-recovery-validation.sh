@@ -61,6 +61,24 @@ route_https catalog catalog catalog.homelab.gvlad.dev
 route_https observability grafana grafana.homelab.gvlad.dev
 route_https observability prometheus prometheus.homelab.gvlad.dev
 route_https validation whoami validation.homelab.gvlad.dev
+if kubectl -n media get deployment jellyfin >/dev/null 2>&1; then
+  kubectl -n media rollout status deployment/jellyfin --timeout=180s
+  route_https media jellyfin media.homelab.gvlad.dev
+fi
+if kubectl -n media get deployment navidrome >/dev/null 2>&1; then
+  kubectl -n media rollout status deployment/navidrome --timeout=180s
+  route_https media navidrome music.homelab.gvlad.dev
+fi
+if kubectl -n media get deployment books >/dev/null 2>&1; then
+  kubectl -n media rollout status deployment/books --timeout=180s
+  route_https media books books.homelab.gvlad.dev
+fi
+if systemctl list-unit-files homelab-private-dns-update.timer 2>/dev/null | grep -q '^homelab-private-dns-update.timer'; then
+  systemctl is-active --quiet homelab-private-dns-update.timer || fail 'private DNS update timer is not active'
+  for host in catalog grafana prometheus media music books; do
+    getent ahostsv4 "$host.homelab.gvlad.dev" >/dev/null || fail "private DNS does not resolve $host.homelab.gvlad.dev"
+  done
+fi
 step 'Backup and storage baseline'
 systemctl is-enabled --quiet homelab-backup.timer || fail 'backup timer is not enabled'
 systemctl is-active --quiet homelab-backup.timer || fail 'backup timer is not active'

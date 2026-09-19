@@ -1,0 +1,46 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: {name: infrastructure-media-base, namespace: flux-system}
+spec:
+  interval: 10m0s
+  dependsOn: [{name: applications-catalog}]
+  path: ./infra/infrastructure/media
+  prune: true
+  wait: true
+  sourceRef: {kind: GitRepository, name: flux-system}
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: {name: applications-jellyfin, namespace: flux-system}
+spec:
+  interval: 10m0s
+  dependsOn: [{name: infrastructure-media-base}]
+  path: ./infra/apps/media/jellyfin
+  prune: true
+  wait: true
+  healthChecks: [{apiVersion: apps/v1, kind: Deployment, name: jellyfin, namespace: media}]
+  sourceRef: {kind: GitRepository, name: flux-system}
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: {name: applications-navidrome, namespace: flux-system}
+spec:
+  interval: 10m0s
+  dependsOn: [{name: applications-jellyfin}]
+  path: ./infra/apps/media/navidrome
+  prune: true
+  wait: true
+  healthChecks: [{apiVersion: apps/v1, kind: Deployment, name: navidrome, namespace: media}]
+  sourceRef: {kind: GitRepository, name: flux-system}
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: {name: applications-books, namespace: flux-system}
+spec:
+  interval: 10m0s
+  dependsOn: [{name: applications-navidrome}]
+  path: ./infra/apps/media/books
+  prune: true
+  wait: true
+  healthChecks: [{apiVersion: apps/v1, kind: Deployment, name: books, namespace: media}]
+  sourceRef: {kind: GitRepository, name: flux-system}

@@ -119,10 +119,35 @@ before enabling Phase K.
 
 ## Phase K — media services
 
-Phase K is intentionally not enabled by the Phase J preparation. Enable
-Jellyfin, Navidrome, and one book service individually only after the Phase J
-restore gate is green. Use read-only canonical media mounts and private
-Traefik routes; keep photos/Immich disabled.
+Phase K is represented by dependency-ordered Flux Kustomizations. Prepare the
+host-owned config directories, then reconcile the source; Flux applies
+Jellyfin, Navidrome, and Kavita one at a time. The workloads use read-only
+canonical media mounts and private Traefik routes; keep photos/Immich disabled.
+
+```bash
+sudo ./infra/scripts/host/batch/77-prepare-media-storage.sh
+export KUBECONFIG="$HOME/.kube/config-homelab"
+flux reconcile source git flux-system
+flux reconcile kustomization flux-system --with-source
+flux get kustomizations -A
+kubectl -n media get deploy,pod,svc,ingressroute,pvc
+```
+
+## Phase L — opt-in private DNS
+
+Install host-level dnsmasq only when ready to opt in clients. It updates
+records from the current private default route, leaves router DHCP unchanged,
+and is not a household DNS dependency:
+
+```bash
+sudo ./infra/scripts/host/batch/76-install-private-dns.sh "$PWD"
+dig @127.0.0.1 catalog.homelab.gvlad.dev
+systemctl status homelab-private-dns-update.timer
+```
+
+On each client, set the current homelab host private IP as a manual DNS server;
+do not publish RFC1918 records in Cloudflare. Staging TLS still requires the
+existing browser warning or `curl -k`.
 
 ## Batch 4 — optional file-share foundation
 

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: jellyfin-config, namespace: media}
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: homelab-media
+  volumeName: media-jellyfin-config
+  resources: {requests: {storage: 5Gi}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: jellyfin-movies, namespace: media}
+spec:
+  accessModes: [ReadOnlyMany]
+  storageClassName: homelab-media
+  volumeName: media-movies
+  resources: {requests: {storage: 100Gi}}
