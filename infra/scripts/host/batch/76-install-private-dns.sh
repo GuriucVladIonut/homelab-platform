@@ -10,9 +10,10 @@ install -D -m 0755 "$ROOT/infra/scripts/host/private-dns-update.sh" /usr/local/s
 install -D -m 0644 "$ROOT/infra/systemd/homelab-private-dns-update.service" /etc/systemd/system/homelab-private-dns-update.service
 install -D -m 0644 "$ROOT/infra/systemd/homelab-private-dns-update.timer" /etc/systemd/system/homelab-private-dns-update.timer
 systemctl daemon-reload
-systemctl enable --now dnsmasq.service
+systemctl stop dnsmasq.service 2>/dev/null || true
 systemctl enable --now homelab-private-dns-update.timer
 systemctl start homelab-private-dns-update.service
+systemctl enable --now dnsmasq.service
 systemctl restart dnsmasq.service
 if command -v ufw >/dev/null && ufw status | grep -q '^Status: active'; then
   ufw allow from 10.0.0.0/8 to any port 53 proto udp comment 'homelab private DNS'
